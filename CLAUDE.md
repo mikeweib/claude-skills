@@ -42,6 +42,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 技能应包含 **触发条件** 和 **不使用的情况** 两段，帮助 Claude Code 判断是否加载
 - 审查类技能应提供分步流程，按优先级排列，每步有明确的输入/输出
 
+## 开发环境
+
+`~/.claude/skills/cpp-memory-safety` 是该仓库 `cpp-memory-safety/` 的软链接。在此仓库修改技能文件后，Claude Code 立即生效，无需复制。新增其他技能后，同样在 `~/.claude/skills/` 下创建对应的软链接。
+
+```bash
+ln -s /Users/leigod/Documents/workspace/github/claude-skills/<skill-name> ~/.claude/skills/<skill-name>
+```
+
 ## Git 工作流
 
 - 主分支：`main`
