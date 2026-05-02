@@ -33,6 +33,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | 技能 | 用途 |
 |------|------|
 | `cpp-memory-safety` | C++ 内存安全审查：智能指针选择、所有权配对、数组边界、悬空指针、Rule of Five、异常安全、并发 |
+| `harness-score` | Harness 工程评分：基于 ECC 规范对项目 agent harness 合规性打分（A-F 等级），逐类分析并给出改进建议 |
+| `gn-reviewer` | GN 构建文件审查：检查 BUILD.gn / .gni 的 import 路径、依赖声明、target 类型、config 作用域、visibility、testonly、WebRTC 模板使用 |
 
 ## 技能编写规范
 
