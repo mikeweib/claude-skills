@@ -1,0 +1,17 @@
+[
+  {
+    "id": 1,
+    "prompt": "审查这段 C++ 代码的内存安全问题：\n\nclass StringBuffer {\nprivate:\n    char* buffer;\n    size_t size;\npublic:\n    StringBuffer(const char* str) {\n        size = strlen(str);\n        buffer = new char[size + 1];\n        strcpy(buffer, str);\n    }\n    ~StringBuffer() { delete[] buffer; }\n    void append(const char* str) {\n        size_t newSize = size + strlen(str);\n        char* newBuffer = new char[newSize + 1];\n        strcpy(newBuffer, buffer);\n        strcat(newBuffer, str);\n        buffer = newBuffer;\n        size = newSize;\n    }\n    const char* get() const { return buffer; }\n};\n\nint main() {\n    StringBuffer sb(\"hello\");\n    StringBuffer sb2 = sb;\n    sb.append(\" world\");\n    std::cout << sb2.get() << std::endl;\n}",
+    "expected": "应检出：Rule of Three 违例、append 内存泄漏、nullptr 检查缺失、整数溢出风险、get() 返回内部指针、Smart Pointer 选择建议"
+  },
+  {
+    "id": 2,
+    "prompt": "审查以下代码有没有内存安全问题：\n\nvoid process_data(const std::vector<int>& data) {\n    std::unique_ptr<int[]> temp(new int[data.size()]);\n    for (size_t i = 0; i < data.size(); i++) {\n        temp[i] = data[i] * 2;\n    }\n    std::cout << temp[0] << std::endl;\n}",
+    "expected": "空容器越界、signed overflow、可用 make_unique 改进，但用 unique_ptr 是正确的（非 shared_ptr 过度使用）"
+  },
+  {
+    "id": 3,
+    "prompt": "审查这段 WebRTC 项目代码的内存安全问题：\n\n#include \"rtc_base/ref_count.h\"\n\nclass AudioTrack : public rtc::RefCountInterface {\nprivate:\n    char* raw_buffer_;\npublic:\n    AudioTrack() : raw_buffer_(new char[4096]) {}\n    ~AudioTrack() { delete[] raw_buffer_; }\n    void Process() { /* audio processing */ }\n};\n\nclass AudioManager {\nprivate:\n    std::shared_ptr<AudioTrack> track_;\npublic:\n    AudioManager() : track_(std::make_shared<AudioTrack>()) {}\n    void Play() { track_->Process(); }\n};",
+    "expected": "关键：WebRTC 工程中使用了 std::shared_ptr 而非 rtc::scoped_refptr，AudioTrack 继承 RefCountInterface 但用 std::shared_ptr 管理，控制块不兼容；Secondary：缺少 Rule of Five、raw_buffer_ 应用 unique_ptr"
+  }
+]
