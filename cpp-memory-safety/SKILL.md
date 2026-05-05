@@ -29,6 +29,8 @@ C++ 内存安全问题是最高频的 bug 来源。审查代码时必须逐项�
 
 搜索代码中的 `new` / `delete` / `malloc` / `free` / `realloc`。没有裸内存操作 → 跳到 Step 3。
 
+**自动化：** 运行 `scripts/scan-raw-memory.sh [directory]` 快速扫描所有裸内存操作。
+
 **输出：** 裸内存操作列表（文件:行号）。
 
 ### Step 2: 所有权配对
@@ -44,6 +46,8 @@ C++ 内存安全问题是最高频的 bug 来源。审查代码时必须逐项�
 
 无论是否有裸内存操作，始终检查：
 
+**自动化：** 运行 `scripts/find-shared-ptr-overuse.sh [directory]` 统计所有 `shared_ptr` 使用。WebRTC 项目加 `--webrtc` 标记。
+
 1. **过度使用 `shared_ptr`**：仅在真正需要共享所有权时用 `shared_ptr`，能用 `unique_ptr` 的不要用 `shared_ptr`（性能开销大、语义不清晰）
 2. **WebRTC 工程专项**：如果项目依赖 webrtc 库，**禁止使用 `std::shared_ptr`**，必须使用 `rtc::scoped_refptr<T>`。WebRTC 有自己的引用计数基类 `rtc::RefCountInterface`，与 `std::shared_ptr` 的控制块不兼容
 3. **`weak_ptr` 打破循环引用**：当两个对象互相引用时，一方用 `weak_ptr` 避免循环
@@ -52,6 +56,8 @@ C++ 内存安全问题是最高频的 bug 来源。审查代码时必须逐项�
 **输出：** `shared_ptr` 过度使用 / WebRTC 项目使用了 `std::shared_ptr` / 循环引用风险。
 
 ### Step 4: 类级别检查（class 有 raw pointer 成员时）
+
+**自动化：** 运行 `scripts/check-rule-of-five.sh [directory]` 检查所有含 raw pointer 成员的 class 的 Rule of Five 状态。
 
 1. **Rule of Five**：destructor / copy ctor / copy assign / move ctor / move assign 是否齐全或 `= delete`
 2. **Move 语义**：move ctor / move assign 是否将源对象 raw pointer 置 `nullptr`
@@ -116,6 +122,18 @@ C++ 内存安全问题是最高频的 bug 来源。审查代码时必须逐项�
 | `shared_ptr` 循环引用 | memory leak | 一方改用 `weak_ptr` |
 | Move constructor 未将源对象 raw pointer 置 `nullptr` | moved-from 对象的 destructor 仍会 `delete`，导致 double-free | 移动后源指针置 `nullptr`：`other.ptr = nullptr;` |
 | 多线程读写 `shared_ptr` 指向的数据未加锁 | data race = undefined behavior。`shared_ptr` 只保证引用计数原子性，不保护指向的数据 | 加 `std::mutex` 保护数据，或用 `std::atomic` 对简单类型 |
+
+## Scripts 自动化脚本
+
+审查时可配合以下脚本快速定位问题：
+
+| 脚本 | 用途 | 对应 Step |
+|------|------|-----------|
+| `scripts/scan-raw-memory.sh [dir]` | 扫描所有 `new`/`delete`/`malloc`/`free` | Step 1 |
+| `scripts/find-shared-ptr-overuse.sh [dir] [--webrtc]` | 统计 `shared_ptr` 使用，WebRTC 项目检查误用 | Step 3 |
+| `scripts/check-rule-of-five.sh [dir]` | 检查含 raw pointer 成员的 class 的 Rule of Five | Step 4 |
+
+脚本输出均为 `file:line` 格式，方便直接跳转审查。
 
 ## References 参考文件
 

@@ -30,6 +30,8 @@ GN (Generate Ninja) 是 Chromium/WebRTC 生态的元构建系统。BUILD.gn 和 
 
 ### Step 1: Import 路径验证
 
+**自动化：** 运行 `scripts/validate-imports.sh [directory|file] [--source-root <path>]` 批量验证 import 路径。
+
 检查所有 `import()` 语句：
 
 1. **路径存在性**：search 确认 `import("//path/to/file.gni")` 中的文件存在
@@ -65,6 +67,8 @@ GN (Generate Ninja) 是 Chromium/WebRTC 生态的元构建系统。BUILD.gn 和 
 **输出：** target 类型/命名/源文件问题。
 
 ### Step 3: 依赖声明正确性
+
+**自动化：** 运行 `scripts/check-deps-headers.sh <BUILD.gn> <target_name>` 交叉验证 public header 的 `#include` 与 `deps`/`public_deps` 声明。
 
 检查 `deps` / `public_deps` / `allow_circular_includes_from`：
 
@@ -125,6 +129,8 @@ GN (Generate Ninja) 是 Chromium/WebRTC 生态的元构建系统。BUILD.gn 和 
 
 ### Step 5: 可见性与条件编译
 
+**自动化：** 运行 `scripts/check-testonly-leak.sh [directory]` 检查 testonly target 是否被非测试 target 依赖。
+
 1. **`visibility`**：
    - 默认仅对同 BUILD.gn 内可见
    - `visibility = [ "*" ]` 全局可见是否必要
@@ -152,6 +158,8 @@ GN (Generate Ninja) 是 Chromium/WebRTC 生态的元构建系统。BUILD.gn 和 
 
 ### Step 7: 配置与 Flag 重复检查
 
+**自动化：** 运行 `scripts/find-duplicate-configs.sh [directory]` 查找跨 target 重复的 `cflags`/`ldflags`/`defines` 块。
+
 检查是否存在跨 target 复制粘贴相同的 `cflags` / `ldflags` / `defines` 块：
 
 1. **内联 flag 重复**：
@@ -169,6 +177,8 @@ GN (Generate Ninja) 是 Chromium/WebRTC 生态的元构建系统。BUILD.gn 和 
 **输出：** 重复 flag 块列表 / 应统一为 config 的位置。
 
 ### Step 8: 死代码与注释代码检查
+
+**自动化：** 运行 `scripts/find-dead-gn-code.sh [directory] [--threshold N]` 查找 BUILD.gn 中大段注释代码块。
 
 1. **大段注释代码**：
    - BUILD.gn 中超过 10 行连续注释的代码块应标记
@@ -235,6 +245,20 @@ GN (Generate Ninja) 是 Chromium/WebRTC 生态的元构建系统。BUILD.gn 和 
 | 平台条件 target 在非目标平台 sources 为空 | GN 生成空库警告，依赖图中存在无效节点 | 将整个 target 放入平台条件块中，或确保只在有 sources 的平台上被依赖 |
 | testonly target 被引用时缺少测试开关 guard | release build 可能意外引入测试代码 | 确保引用处有 `rtc_include_xxx_tests` 等 guard 条件 |
 | import 路径混用绝对路径和相对路径 | 文件移动时需要更新相对路径，不一致增加维护成本 | 统一使用 `//` 绝对路径 |
+
+## Scripts 自动化脚本
+
+审查时可配合以下脚本快速定位问题：
+
+| 脚本 | 用途 | 对应 Step |
+|------|------|-----------|
+| `scripts/validate-imports.sh [dir\|file]` | 验证所有 `import()` 路径指向的文件存在 | Step 1 |
+| `scripts/check-deps-headers.sh <BUILD.gn> <target>` | 交叉验证 public header 的 `#include` 与 `deps`/`public_deps` | Step 3 |
+| `scripts/check-testonly-leak.sh [dir]` | 检查 `testonly = true` 的 target 是否被非测试 target 依赖 | Step 5 |
+| `scripts/find-duplicate-configs.sh [dir]` | 查找跨 target 重复的 `cflags`/`ldflags`/`defines` | Step 7 |
+| `scripts/find-dead-gn-code.sh [dir] [--threshold N]` | 查找 BUILD.gn 中大段注释代码块 | Step 8 |
+
+脚本输出均包含 file:line 定位信息，可直接用于导航和修复。
 
 ## References 参考文件
 

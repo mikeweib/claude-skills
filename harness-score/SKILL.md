@@ -27,6 +27,8 @@ description: Use when the user asks to score, grade, or audit a project's agent 
 
 确认评分的前提条件：
 
+**自动化：** 运行 `scripts/preflight-check.sh [project_dir]` 一键完成环境预检并输出初步评分。
+
 1. **检查 ECC 插件安装**：查找 `~/.claude/plugins/cache/ecc/` 目录
 2. **检查审计引擎可用**：确认 `scripts/harness-audit.js` 存在
 3. **确定项目根目录**：默认为当前工作目录
@@ -201,6 +203,12 @@ consumer 模式下通常无直接检查项。建议：
 | Quality Gates 得分低 | 无测试/CI | 添加 `npm test` 和 GitHub Actions |
 | Security 得分低 | 缺少安全文档和护栏 | 添加 `SECURITY.md`、更新 `.gitignore`、配置 hooks |
 | Cost Efficiency 显示 N/A | consumer 模式无此检查项 | 正常现象，可手动使用 `cost-aware-llm-pipeline` skill |
+
+## Scripts 自动化脚本
+
+| 脚本 | 用途 | 对应 Step |
+|------|------|-----------|
+| `scripts/preflight-check.sh [project_dir]` | 一键环境预检，检查 ECC 安装状态和项目 harness 基础配置，输出初步评分 | Step 1 |
 
 ## References 参考文件
 
