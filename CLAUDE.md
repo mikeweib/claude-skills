@@ -13,6 +13,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```
 <skill-name>/
 ├── SKILL.md              # 技能入口，包含 frontmatter 和完整指令
+├── scripts/               # 自动化脚本（可选）
+│   └── <script>.sh        #   shell 脚本，输出 file:line 格式
 └── references/            # 参考资料（可选）
     └── <reference>.md
 ```
@@ -22,6 +24,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `name` 与目录名一致，使用 kebab-case
 - `description` 一句话描述触发条件和用途，用于自动匹配
 - 正文包含：触发条件（When to Use）、审查/执行流程、检查清单、常见错误
+
+**scripts/ 目录：**
+- 存放辅助审查的 shell 脚本，输出格式统一为 `file:line` 便于导航
+- 脚本在 SKILL.md 的对应 Step 中通过 `**自动化：**` 标记引用
+- 脚本应处理边界情况（无匹配文件、缺参数等），优雅退出
+- 文件名使用 kebab-case
 
 **references/ 目录：**
 - 存放代码示例、速查表等辅助材料
@@ -43,14 +51,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 代码注释和示例中的标识符保持英文
 - 技能应包含 **触发条件** 和 **不使用的情况** 两段，帮助 Claude Code 判断是否加载
 - 审查类技能应提供分步流程，按优先级排列，每步有明确的输入/输出
+- 如有关联脚本，在 SKILL.md 中添加 `## Scripts` 速查表，并在对应 Step 中通过 `**自动化：**` 引用
 
 ## 开发环境
 
-`~/.claude/skills/cpp-memory-safety` 是该仓库 `cpp-memory-safety/` 的软链接。在此仓库修改技能文件后，Claude Code 立即生效，无需复制。新增其他技能后，同样在 `~/.claude/skills/` 下创建对应的软链接。
+三个技能的软链接配置：
 
 ```bash
-ln -s /Users/leigod/Documents/workspace/github/claude-skills/<skill-name> ~/.claude/skills/<skill-name>
+ln -s /Users/leigod/Documents/workspace/github/claude-skills/cpp-memory-safety ~/.claude/skills/cpp-memory-safety
+ln -s /Users/leigod/Documents/workspace/github/claude-skills/gn-reviewer ~/.claude/skills/gn-reviewer
+ln -s /Users/leigod/Documents/workspace/github/claude-skills/harness-score ~/.claude/skills/harness-score
 ```
+
+在此仓库修改技能文件后，Claude Code 立即生效，无需复制。
 
 ## Git 工作流
 
