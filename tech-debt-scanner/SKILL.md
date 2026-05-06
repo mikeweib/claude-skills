@@ -1,13 +1,13 @@
 ---
 name: tech-debt-scanner
-description: Use when the user asks to scan, audit, or score a project's technical debt — e.g. "扫描技术债", "代码质量评分", "检查技术债", "tech debt audit", "工程健康度". Runs deterministic shell scripts to detect marker comments (TODO/FIXME/HACK), dead code, complexity violations, and deprecated API usage across multiple languages (C/C++, Java, Python, JS/TS, Go, Rust, Swift, C#). Outputs a 0-100 score with A-F grade and per-category detailed report with file:line locations.
+description: Use when the user asks to scan, audit, or score a project's technical debt — e.g. "扫描技术债", "代码质量评分", "检查技术债", "tech debt audit", "工程健康度". Runs deterministic shell scripts to detect marker comments (TODO/FIXME/HACK), dead code, complexity violations, deprecated API usage and duplicate code across multiple languages (C/C++, Java, Python, JS/TS, Go, Rust, Swift, C#). Outputs a 0-100 score with A-F grade and per-category detailed report with file:line locations.
 ---
 
 # 技术债扫描
 
 ## Overview
 
-对项目进行四维度的技术债扫描，给出 0-100 的量化评分和 A-F 等级。扫描覆盖标记注释、死代码、复杂度、废弃 API 四类，支持 C/C++、Java、Python、JS/TS、Go、Rust 等主流语言。
+对项目进行五维度的技术债扫描，给出 0-100 的量化评分和 A-F 等级。扫描覆盖标记注释、死代码、复杂度、废弃 API、重复代码五类，支持 C/C++、Java、Python、JS/TS、Go、Rust 等主流语言。
 
 ## When to Use 触发条件
 
@@ -24,6 +24,16 @@ description: Use when the user asks to scan, audit, or score a project's technic
 
 ## Scoring Workflow 评分流程
 
+> **评分体系：** 5 个类别各 20 分，满分 100。
+
+| 类别 | 权重 | 检测项 |
+|------|------|--------|
+| 标记注释 | 20% | FIXME/HACK(-3), XXX/TEMP等(-2), TODO(-1) |
+| 死代码 | 20% | 注释代码块(-3), 空catch(-2), if(false)(-3), return后代码(-1) |
+| 复杂度 | 20% | 文件>800行(-2), 函数>50行(-1), 嵌套>=4(-2), 参数>=5(-1) |
+| 废弃API | 20% | @deprecated(-3), 已知废弃API(-2) |
+| 重复代码 | 20% | 完全重复文件(-3), 复制粘贴块(-2), 高相似度文件(-1) |
+
 ### Step 1: 环境预检
 
 确认扫描条件并检测项目语言组成：
@@ -37,7 +47,7 @@ description: Use when the user asks to scan, audit, or score a project's technic
 
 **输出：** 检测到的语言列表 / 文件数 / 代码量 / 就绪状态。
 
-### Step 2: 标记注释扫描（权重 25%）
+### Step 2: 标记注释扫描（权重 20%）
 
 **自动化：** 运行 `scripts/scan-marker-comments.sh [project_dir]` 扫描所有标记注释。
 
@@ -59,7 +69,7 @@ description: Use when the user asks to scan, audit, or score a project's technic
 - TODO 密度过高（>5 条/千行）→ 大量功能待完成
 - 存在 TEMP/KLUDGE 标记 → 临时方案未清理
 
-### Step 3: 死代码检测（权重 25%）
+### Step 3: 死代码检测（权重 20%）
 
 **自动化：** 运行 `scripts/scan-dead-code.sh [project_dir] [--threshold N]` 检测死代码。
 
@@ -75,7 +85,7 @@ description: Use when the user asks to scan, audit, or score a project's technic
 - 空 catch 块吞异常 → 错误被静默忽略
 - if(false) 块 → 死代码未清理
 
-### Step 4: 复杂度分析（权重 25%）
+### Step 4: 复杂度分析（权重 20%）
 
 **自动化：** 运行 `scripts/scan-complexity.sh [project_dir]` 分析代码复杂度。
 
@@ -94,7 +104,7 @@ description: Use when the user asks to scan, audit, or score a project's technic
 - 嵌套过深 → 圈复杂度高，容易出错
 - 参数过多 → 函数接口复杂，考虑封装为结构体/对象
 
-### Step 5: 废弃 API 扫描（权重 25%）
+### Step 5: 废弃 API 扫描（权重 20%）
 
 **自动化：** 运行 `scripts/scan-deprecated-api.sh [project_dir]` 扫描废弃 API。
 
@@ -119,9 +129,26 @@ description: Use when the user asks to scan, audit, or score a project's technic
 - 使用已知不安全的 C 函数 → 缓冲区溢出风险
 - Python `distutils` → Python 3.12 已移除
 
-### Step 6: 等级评定与报告
+### Step 6: 重复代码检测（权重 20%）
 
-汇总 4 个类别的得分（满分 100），转换为等级：
+**自动化：** 运行 `scripts/scan-duplicate-code.sh [project_dir]` 检测重复代码。
+
+| 检测项 | 扣分 | 上限 |
+|--------|------|------|
+| 完全重复文件（MD5 相同） | -3 分/对 | -8 |
+| 复制粘贴块（>=6 行连续相同） | -2 分/块 | -7 |
+| 高相似度文件（>80% 行共享率） | -1 分/对 | -5 |
+
+**排除规则：** 自动跳过 `node_modules/`、`vendor/`、`third_party/`、`build/` 等第三方代码目录。空文件和极小的 stub 文件（<50 字节）不参与相似度比较。
+
+**得分低的原因：**
+- 大量完全重复的文件 → 复制粘贴式开发，bug 修复需要同步多处
+- 大量复制粘贴块 → 缺少抽象，应提取公共函数/模块
+- 高相似度文件对 → 可能是复制后修改的变体，考虑合并或提取基类
+
+### Step 7: 等级评定与报告
+
+汇总 5 个类别的得分（满分 100），转换为等级：
 
 | 得分率 | 等级 | 含义 | 行动 |
 |--------|------|------|------|
@@ -145,6 +172,7 @@ description: Use when the user asks to scan, audit, or score a project's technic
 - [ ] **死代码（dead code）** — 无大段注释代码块、无空 catch、无死条件
 - [ ] **复杂度（complexity）** — 文件 <800 行、函数 <50 行、嵌套 <4 层、参数 <5 个
 - [ ] **废弃 API（deprecated API）** — 无 @deprecated 标记使用、无已知不安全函数
+- [ ] **重复代码（duplicate code）** — 无完全重复文件、无 >=6 行复制粘贴块、无 >80% 相似文件对
 - [ ] **排除规则（exclusions）** — 生成文件、第三方代码已被正确排除
 - [ ] **密度公平（density fairness）** — 扣分已按项目规模进行密度调整
 
@@ -160,6 +188,9 @@ description: Use when the user asks to scan, audit, or score a project's technic
 | 复杂度 | 函数大小 | <30 行 | >50 行/函数 |
 | 废弃 API | @deprecated | 0 | >3 处 |
 | 废弃 API | 不安全函数 | 0 | >5 处 |
+| 重复代码 | 完全重复文件 | 0 | >3 对 |
+| 重复代码 | 复制粘贴块 (>=6行) | 0 | >5 块 |
+| 重复代码 | 高相似度文件 (>80%) | 0 | >3 对 |
 
 ## Common Issues 常见问题
 
@@ -173,6 +204,9 @@ description: Use when the user asks to scan, audit, or score a project's technic
 | 注释代码块被误报 | 文件头部的 license 注释 | 调整 --threshold 参数 |
 | 生成文件被计入复杂度 | 排除模式未匹配 | 添加自定义排除规则 |
 | C 项目废弃 API 误报 | 项目已有安全封装 | 手动审查确认是否需扣分 |
+| 重复代码得分极低 | 项目大量复制粘贴 | 提取公共函数/模块，合并重复文件 |
+| 跨目录重复未被检测 | 检测范围只限同目录 | 检查是否有跨目录的 copy-paste |
+| 模板代码被误报 | 脚手架/生成器产生的相似文件 | 检查排除规则是否覆盖生成目录 |
 
 ## Scripts 自动化脚本
 
@@ -183,9 +217,10 @@ description: Use when the user asks to scan, audit, or score a project's technic
 | `scripts/scan-dead-code.sh [dir] [--threshold N]` | 检测注释代码块、空 catch、死条件 | Step 3 |
 | `scripts/scan-complexity.sh [dir]` | 分析文件/函数大小、嵌套深度、参数数量 | Step 4 |
 | `scripts/scan-deprecated-api.sh [dir]` | 扫描 @deprecated 注解和已知废弃 API | Step 5 |
+| `scripts/scan-duplicate-code.sh [dir]` | 检测完全重复文件、复制粘贴块、高相似度文件 | Step 6 |
 
 脚本输出均包含 `file:line` 定位信息，可直接用于导航和修复。
 
 ## References 参考文件
 
-- **[debt-patterns.md](references/debt-patterns.md)** — 按语言分类的技术债模式：标记注释约定、死代码模式、废弃 API 迁移表、复杂度反模式
+- **[debt-patterns.md](references/debt-patterns.md)** — 按语言分类的技术债模式：标记注释约定、死代码模式、废弃 API 迁移表、复杂度反模式、重复代码模式

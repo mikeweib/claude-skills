@@ -188,7 +188,7 @@ params_penalty=0
 [ "$many_params_count" -gt 0 ] && params_penalty=$((many_params_count * 1 > 4 ? 4 : many_params_count * 1))
 
 total_penalty=$((large_penalty + func_penalty + nest_penalty + params_penalty))
-score=$((25 - total_penalty > 0 ? 25 - total_penalty : 0))
+score=$((20 - total_penalty > 0 ? 20 - total_penalty : 0))
 
 echo "=== 扣分汇总 ==="
 echo "  超大文件 (>800行): $large_file_count 个 → -$large_penalty"
@@ -196,4 +196,4 @@ echo "  长函数 (>50行):   $long_func_count 个 → -$func_penalty"
 echo "  深层嵌套 (>=4):   $deep_nest_count 处 → -$nest_penalty"
 echo "  过多参数 (>=5):   $many_params_count 个 → -$params_penalty"
 echo "  ----------------------------------------"
-echo "  类别得分: $score/25"
+echo "  类别得分: $score/20"

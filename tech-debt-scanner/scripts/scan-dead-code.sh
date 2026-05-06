@@ -179,7 +179,7 @@ unreachable_penalty=0
 [ "$unreachable_count" -gt 0 ] && unreachable_penalty=$((unreachable_count * 1 > 2 ? 2 : unreachable_count * 1))
 
 total_penalty=$((comment_penalty + catch_penalty + cond_penalty + unreachable_penalty))
-score=$((25 - total_penalty > 0 ? 25 - total_penalty : 0))
+score=$((20 - total_penalty > 0 ? 20 - total_penalty : 0))
 
 echo "=== 扣分汇总 ==="
 echo "  注释代码块:       $comment_block_count 块 → -$comment_penalty"
@@ -187,4 +187,4 @@ echo "  空 catch 块:      $empty_catch_count 条 → -$catch_penalty"
 echo "  死条件分支:       $dead_cond_count 条 → -$cond_penalty"
 echo "  return后不可达:   $unreachable_count 条 → -$unreachable_penalty"
 echo "  ----------------------------------------"
-echo "  类别得分: $score/25"
+echo "  类别得分: $score/20"

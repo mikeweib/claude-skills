@@ -109,11 +109,11 @@ todo_penalty=0
 [ "$todo_count" -gt 0 ] && todo_penalty=$(echo "if ($todo_count > 8) 8 else $todo_count" | bc 2>/dev/null || echo $((todo_count > 8 ? 8 : todo_count)))
 
 total_penalty=$((critical_penalty + sig_penalty + todo_penalty))
-score=$((25 - total_penalty > 0 ? 25 - total_penalty : 0))
+score=$((20 - total_penalty > 0 ? 20 - total_penalty : 0))
 
 echo "=== 扣分汇总 ==="
 echo "  严重 (FIXME/HACK): $critical_count 条 → -$critical_penalty"
 echo "  显著 (XXX/TEMP等): $sig_count 条 → -$sig_penalty"
 echo "  中等 (TODO):       $todo_count 条 → -$todo_penalty"
 echo "  -------------------------------"
-echo "  类别得分: $score/25"
+echo "  类别得分: $score/20"

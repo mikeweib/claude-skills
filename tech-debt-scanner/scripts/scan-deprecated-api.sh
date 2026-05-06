@@ -154,10 +154,10 @@ api_penalty=0
 [ "$api_count" -gt 0 ] && api_penalty=$((api_count * 2 > 13 ? 13 : api_count * 2))
 
 total_penalty=$((ann_penalty + api_penalty))
-score=$((25 - total_penalty > 0 ? 25 - total_penalty : 0))
+score=$((20 - total_penalty > 0 ? 20 - total_penalty : 0))
 
 echo "=== 扣分汇总 ==="
 echo "  注解标记:  $annotation_count 条 → -$ann_penalty"
 echo "  已知 API:  $api_count 条 → -$api_penalty"
 echo "  ---------------------------"
-echo "  类别得分: $score/25"
+echo "  类别得分: $score/20"

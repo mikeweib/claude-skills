@@ -23,7 +23,7 @@ ln -s $(pwd)/<skill-name> ~/.claude/skills/<skill-name>
 | [cpp-memory-safety](./cpp-memory-safety/SKILL.md) | C++ 内存安全审查：智能指针、所有权、数组边界、悬空指针、Rule of Five、异常安全、并发 |
 | [gn-reviewer](./gn-reviewer/SKILL.md) | GN 构建文件审查：import 路径、依赖声明、target 类型、config 作用域、visibility、testonly、WebRTC 模板 |
 | [harness-score](./harness-score/SKILL.md) | Harness 工程评分：基于 ECC 规范对项目 agent harness 合规性打分（A-F 等级），逐类分析并给出改进建议 |
-| [tech-debt-scanner](./tech-debt-scanner/SKILL.md) | 技术债扫描：多语言标记注释/死代码/复杂度/废弃 API 四维度扫描，量化评分（A-F 等级），输出逐类详细报告 |
+| [tech-debt-scanner](./tech-debt-scanner/SKILL.md) | 技术债扫描：多语言标记注释/死代码/复杂度/废弃 API/重复代码五维度扫描，量化评分（A-F 等级），输出逐类详细报告 |
 
 ## 技能结构
 
@@ -67,6 +67,7 @@ ln -s $(pwd)/<skill-name> ~/.claude/skills/<skill-name>
 | `scan-dead-code.sh [dir] [--threshold N]` | 检测注释代码块、空 catch、死条件 |
 | `scan-complexity.sh [dir]` | 分析文件/函数大小、嵌套深度、参数数量 |
 | `scan-deprecated-api.sh [dir]` | 扫描 @deprecated 注解和已知废弃 API |
+| `scan-duplicate-code.sh [dir]` | 检测完全重复文件、复制粘贴块、高相似度文件 |
 
 ### harness-score
 
