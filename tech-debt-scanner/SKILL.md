@@ -43,7 +43,7 @@ description: Use when the user asks to scan, audit, or score a project's technic
 1. 验证目标目录存在
 2. 自动检测项目语言（按文件扩展名统计）
 3. 计算总文件数和代码行数
-4. 确认排除目录（node_modules/、vendor/、.git/ 等）
+4. 确认排除目录（node_modules/、vendor/、third_party/、.git/ 等）
 
 **输出：** 检测到的语言列表 / 文件数 / 代码量 / 就绪状态。
 
@@ -63,6 +63,7 @@ description: Use when the user asks to scan, audit, or score a project's technic
 - 排除 URL 中的关键字（如 `https://` 包含 TODO 不会触发）
 - 排除 license 头中的关键字
 - 排除脚本自身的注释（脚本内联代码中的标记）
+- 排除 `third_party/` 目录（第三方代码不应计入技术债）
 
 **得分低的原因：**
 - 代码中遗留大量 FIXME/HACK → 已知问题未修复
@@ -80,6 +81,8 @@ description: Use when the user asks to scan, audit, or score a project's technic
 | 死条件（if(false)/if(0)） | -3 分/条 | -6 |
 | return 后不可达代码 | -1 分/条 | -2 |
 
+**排除规则：** 自动跳过 `third_party/` 目录（第三方代码的死代码不归本项目管）。
+
 **得分低的原因：**
 - 大量注释掉的代码 → 代码腐烂，引用的符号可能已变更
 - 空 catch 块吞异常 → 错误被静默忽略
@@ -96,7 +99,7 @@ description: Use when the user asks to scan, audit, or score a project's technic
 | 深层嵌套 | >=4 层 | -2 分/处 | -5 |
 | 过多参数 | >=5 个 | -1 分/函数 | -4 |
 
-**排除规则：** 自动跳过生成文件（`*generated*`、`*.pb.*`、`*.g.*`）。
+**排除规则：** 自动跳过生成文件（`*generated*`、`*.pb.*`、`*.g.*`）和 `third_party/` 目录。
 
 **得分低的原因：**
 - 单文件过大 → 职责不清，应拆分
@@ -123,6 +126,8 @@ description: Use when the user asks to scan, audit, or score a project's technic
 | Java | `new Date()`, `Thread.stop()`, `Vector`, `Hashtable` |
 | Go | `ioutil.ReadAll`, `ioutil.ReadFile` 等 |
 | Rust | `std::mem::uninitialized`, `std::env::home_dir` |
+
+**排除规则：** 自动跳过 `third_party/` 目录（第三方代码的 API 选择不由本项目控制）。
 
 **得分低的原因：**
 - 大量使用 @deprecated 标记的 API → 依赖即将被移除
@@ -173,7 +178,7 @@ description: Use when the user asks to scan, audit, or score a project's technic
 - [ ] **复杂度（complexity）** — 文件 <800 行、函数 <50 行、嵌套 <4 层、参数 <5 个
 - [ ] **废弃 API（deprecated API）** — 无 @deprecated 标记使用、无已知不安全函数
 - [ ] **重复代码（duplicate code）** — 无完全重复文件、无 >=6 行复制粘贴块、无 >80% 相似文件对
-- [ ] **排除规则（exclusions）** — 生成文件、第三方代码已被正确排除
+- [ ] **排除规则（exclusions）** — 生成文件、`third_party/` 等第三方代码已被正确排除
 - [ ] **密度公平（density fairness）** — 扣分已按项目规模进行密度调整
 
 ## Quick Reference 速查
@@ -207,6 +212,7 @@ description: Use when the user asks to scan, audit, or score a project's technic
 | 重复代码得分极低 | 项目大量复制粘贴 | 提取公共函数/模块，合并重复文件 |
 | 跨目录重复未被检测 | 检测范围只限同目录 | 检查是否有跨目录的 copy-paste |
 | 模板代码被误报 | 脚手架/生成器产生的相似文件 | 检查排除规则是否覆盖生成目录 |
+| 第三方代码被扫描 | `third_party/` 未在排除列表中 | 确认各脚本的 EXCLUDE_DIRS 包含 `third_party/` |
 
 ## Scripts 自动化脚本
 

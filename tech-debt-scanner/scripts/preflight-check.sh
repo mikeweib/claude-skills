@@ -41,7 +41,7 @@ LANG_MAP=(
 )
 
 # 排除目录
-EXCLUDE_DIRS="-not -path '*/node_modules/*' -not -path '*/vendor/*' -not -path '*/build/*' -not -path '*/dist/*' -not -path '*/.git/*' -not -path '*/target/*' -not -path '*/__pycache__/*'"
+EXCLUDE_DIRS="-not -path '*/node_modules/*' -not -path '*/vendor/*' -not -path '*/third_party/*' -not -path '*/build/*' -not -path '*/dist/*' -not -path '*/.git/*' -not -path '*/target/*' -not -path '*/__pycache__/*'"
 
 declare -A LANG_COUNTS
 declare -A LANG_EXTENSIONS
@@ -105,7 +105,7 @@ echo ""
 echo "--- 排除检查 ---"
 
 excluded_dirs=""
-for d in node_modules vendor build dist .git target __pycache__; do
+for d in node_modules vendor third_party build dist .git target __pycache__; do
     if [ -d "$PROJECT_DIR/$d" ]; then
         [ -n "$excluded_dirs" ] && excluded_dirs="$excluded_dirs, $d" || excluded_dirs="$d"
     fi
