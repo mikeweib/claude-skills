@@ -24,6 +24,7 @@ ln -s $(pwd)/<skill-name> ~/.claude/skills/<skill-name>
 | [gn-reviewer](./gn-reviewer/SKILL.md) | GN 构建文件审查：import 路径、依赖声明、target 类型、config 作用域、visibility、testonly、WebRTC 模板 |
 | [harness-score](./harness-score/SKILL.md) | Harness 工程评分：基于 ECC 规范对项目 agent harness 合规性打分（A-F 等级），逐类分析并给出改进建议 |
 | [tech-debt-scanner](./tech-debt-scanner/SKILL.md) | 技术债扫描：多语言标记注释/死代码/复杂度/废弃 API/重复代码五维度扫描，量化评分（A-F 等级），输出逐类详细报告 |
+| [prd-review](./prd-review/SKILL.md) | 需求评审：对 PRD 和原型图进行 6 维度综合评审（完整性/清晰度/可行性/风险识别/可测试性/UX 一致性），输出 0-100 分和 A-F 等级，及格线 60 分 |
 
 ## 技能结构
 

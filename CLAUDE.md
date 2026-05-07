@@ -44,6 +44,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `harness-score` | Harness 工程评分：基于 ECC 规范对项目 agent harness 合规性打分（A-F 等级），逐类分析并给出改进建议 |
 | `gn-reviewer` | GN 构建文件审查：检查 BUILD.gn / .gni 的 import 路径、依赖声明、target 类型、config 作用域、visibility、testonly、WebRTC 模板使用 |
 | `tech-debt-scanner` | 技术债扫描：多语言标记注释/死代码/复杂度/废弃 API/重复代码五维度扫描，量化评分（A-F 等级） |
+| `prd-review` | 需求评审：对 PRD 和原型图进行 6 维度综合评审（完整性/清晰度/可行性/风险识别/可测试性/UX 一致性），输出 0-100 分和 A-F 等级，及格线 60 分 |
 
 ## 技能编写规范
 
@@ -63,6 +64,7 @@ ln -s /Users/leigod/Documents/workspace/github/claude-skills/cpp-memory-safety ~
 ln -s /Users/leigod/Documents/workspace/github/claude-skills/gn-reviewer ~/.claude/skills/gn-reviewer
 ln -s /Users/leigod/Documents/workspace/github/claude-skills/harness-score ~/.claude/skills/harness-score
 ln -s /Users/leigod/Documents/workspace/github/claude-skills/tech-debt-scanner ~/.claude/skills/tech-debt-scanner
+ln -s /Users/leigod/Documents/workspace/github/claude-skills/prd-review ~/.claude/skills/prd-review
 ```
 
 在此仓库修改技能文件后，Claude Code 立即生效，无需复制。
