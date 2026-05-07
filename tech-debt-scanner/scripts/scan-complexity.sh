@@ -1,9 +1,11 @@
 #!/bin/bash
 # 复杂度分析
-# 用法: scan-complexity.sh [project_dir]
+# 用法: scan-complexity.sh [project_dir] [--cpp-max N] [--js-max N] [--general-max N]
 # 输出: 按子类型分组的 file:line 格式结果 + 扣分汇总
 #
-# 检测: 超大文件(>800行) / 长函数(>50行) / 深层嵌套(>=4) / 过多参数(>=5)
+# 检测: 超大文件 / 长函数(>50行) / 深层嵌套(>=4) / 过多参数(>=5)
+# 超大文件阈值默认: C/C++=2500, JS/TS=1000, 其他=1000
+# 可通过 --cpp-max / --js-max / --general-max 参数覆盖
 
 set -euo pipefail
 
@@ -14,6 +16,30 @@ if [ ! -d "$PROJECT_DIR" ]; then
     exit 1
 fi
 
+# 默认语言阈值
+CPP_MAX=2500
+JS_MAX=1000
+GENERAL_MAX=1000
+
+shift 2>/dev/null || true
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --cpp-max) CPP_MAX="${2:-2500}"; shift 2 ;;
+        --js-max)  JS_MAX="${2:-1000}"; shift 2 ;;
+        --general-max) GENERAL_MAX="${2:-1000}"; shift 2 ;;
+        *) shift ;;
+    esac
+done
+
+# 根据文件扩展名返回对应阈值
+get_threshold() {
+    case "$1" in
+        *.c|*.cc|*.cpp|*.cxx|*.h|*.hpp|*.hh) echo "$CPP_MAX" ;;
+        *.js|*.jsx|*.ts|*.tsx|*.mjs) echo "$JS_MAX" ;;
+        *) echo "$GENERAL_MAX" ;;
+    esac
+}
+
 EXCLUDE_DIRS="-not -path '*/node_modules/*' -not -path '*/vendor/*' -not -path '*/third_party/*' -not -path '*/build/*' -not -path '*/dist/*' -not -path '*/.git/*' -not -path '*/target/*' -not -path '*/__pycache__/*'"
 
 C_EXTS="-name '*.c' -o -name '*.cc' -o -name '*.cpp' -o -name '*.cxx' -o -name '*.h' -o -name '*.hpp' -o -name '*.hh' -o -name '*.java' -o -name '*.js' -o -name '*.jsx' -o -name '*.ts' -o -name '*.tsx' -o -name '*.mjs' -o -name '*.go' -o -name '*.rs' -o -name '*.swift' -o -name '*.cs'"
@@ -23,8 +49,8 @@ PY_EXTS="-name '*.py'"
 echo "=== 复杂度分析 ==="
 echo ""
 
-# ===== 1. 超大文件 (>800 行) =====
-echo "--- 超大文件 (>800 行) -2分/文件 ---"
+# ===== 1. 超大文件 =====
+echo "--- 超大文件 (C/C++>$CPP_MAX 行, JS/TS>$JS_MAX 行, 其他>$GENERAL_MAX 行) -2分/文件 ---"
 echo ""
 
 large_file_count=0
@@ -36,8 +62,9 @@ while IFS= read -r file; do
         *generated*|*.pb.*|*.g.*|*_generated.*) continue ;;
     esac
     lines=$(wc -l < "$file" 2>/dev/null | tr -d ' ')
-    if [ "$lines" -gt 800 ] 2>/dev/null; then
-        echo "  $file:$lines 行"
+    threshold=$(get_threshold "$file")
+    if [ "$lines" -gt "$threshold" ] 2>/dev/null; then
+        echo "  $file:$lines 行 (阈值>$threshold)"
         large_file_count=$((large_file_count + 1))
     fi
 done < <(eval "find \"$PROJECT_DIR\" $EXCLUDE_DIRS \( $C_EXTS -o $PY_EXTS \) -type f 2>/dev/null" | head -500)
@@ -191,7 +218,8 @@ total_penalty=$((large_penalty + func_penalty + nest_penalty + params_penalty))
 score=$((20 - total_penalty > 0 ? 20 - total_penalty : 0))
 
 echo "=== 扣分汇总 ==="
-echo "  超大文件 (>800行): $large_file_count 个 → -$large_penalty"
+echo "  文件阈值: C/C++>$CPP_MAX, JS/TS>$JS_MAX, 其他>$GENERAL_MAX"
+echo "  超大文件:        $large_file_count 个 → -$large_penalty"
 echo "  长函数 (>50行):   $long_func_count 个 → -$func_penalty"
 echo "  深层嵌套 (>=4):   $deep_nest_count 处 → -$nest_penalty"
 echo "  过多参数 (>=5):   $many_params_count 个 → -$params_penalty"

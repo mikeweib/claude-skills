@@ -32,7 +32,7 @@ description: Use when the user asks to scan, audit, or score a project's technic
 |------|------|--------|
 | 标记注释 | 20% | FIXME/HACK(-3), XXX/TEMP等(-2), TODO(-1) |
 | 死代码 | 20% | 注释代码块(-3), 空catch(-2), if(false)(-3), return后代码(-1) |
-| 复杂度 | 20% | 文件>800行(-2), 函数>50行(-1), 嵌套>=4(-2), 参数>=5(-1) |
+| 复杂度 | 20% | 文件过大(-2, 按语言), 函数>50行(-1), 嵌套>=4(-2), 参数>=5(-1) |
 | 废弃API | 20% | @deprecated(-3), 已知废弃API(-2) |
 | 重复代码 | 20% | 完全重复文件(-3), 复制粘贴块(-2), 高相似度文件(-1) |
 
@@ -92,11 +92,11 @@ description: Use when the user asks to scan, audit, or score a project's technic
 
 ### Step 4: 复杂度分析（权重 20%）
 
-**自动化：** 运行 `scripts/scan-complexity.sh [project_dir]` 分析代码复杂度。
+**自动化：** 运行 `scripts/scan-complexity.sh [project_dir] [--cpp-max N] [--js-max N] [--general-max N]` 分析代码复杂度。
 
 | 检测项 | 阈值 | 扣分 | 上限 |
 |--------|------|------|------|
-| 超大文件 | >800 行 | -2 分/文件 | -8 |
+| 超大文件 | C/C++ >2500 行, JS/TS >1000 行, 其他 >1000 行 | -2 分/文件 | -8 |
 | 长函数 | >50 行 | -1 分/函数 | -8 |
 | 深层嵌套 | >=4 层 | -2 分/处 | -5 |
 | 过多参数 | >=5 个 | -1 分/函数 | -4 |
@@ -104,7 +104,7 @@ description: Use when the user asks to scan, audit, or score a project's technic
 **排除规则：** 自动跳过生成文件（`*generated*`、`*.pb.*`、`*.g.*`）和 `third_party/` 目录。
 
 **得分低的原因：**
-- 单文件过大 → 职责不清，应拆分
+- 单文件过大（C/C++ >2500 行, 其他 >1000 行）→ 职责不清，应拆分
 - 函数过长 → 逻辑复杂，难以理解和测试
 - 嵌套过深 → 圈复杂度高，容易出错
 - 参数过多 → 函数接口复杂，考虑封装为结构体/对象
@@ -177,7 +177,7 @@ description: Use when the user asks to scan, audit, or score a project's technic
 
 - [ ] **标记注释（marker comments）** — TODO/FIXME/HACK 密度是否健康（<1 条/千行）
 - [ ] **死代码（dead code）** — 无大段注释代码块、无空 catch、无死条件
-- [ ] **复杂度（complexity）** — 文件 <800 行、函数 <50 行、嵌套 <4 层、参数 <5 个
+- [ ] **复杂度（complexity）** — 文件不超过语言特定上限（C/C++ 2500 行, 其他 1000 行）、函数 <50 行、嵌套 <4 层、参数 <5 个
 - [ ] **废弃 API（deprecated API）** — 无 @deprecated 标记使用、无已知不安全函数
 - [ ] **重复代码（duplicate code）** — 无完全重复文件、无 >=6 行复制粘贴块、无 >80% 相似文件对
 - [ ] **排除规则（exclusions）** — 生成文件、`third_party/` 等第三方代码已被正确排除
@@ -191,7 +191,7 @@ description: Use when the user asks to scan, audit, or score a project's technic
 | 标记注释 | FIXME/HACK 数量 | 0 | >3 |
 | 死代码 | 注释代码块 | 0 块 >10 行 | >3 块 |
 | 死代码 | 空 catch 块 | 0 | >2 |
-| 复杂度 | 文件大小 | <500 行 | >800 行/文件 |
+| 复杂度 | 文件大小 | <500 行 | C/C++ >2500, JS/TS >1000, 其他 >1000 |
 | 复杂度 | 函数大小 | <30 行 | >50 行/函数 |
 | 废弃 API | @deprecated | 0 | >3 处 |
 | 废弃 API | 不安全函数 | 0 | >5 处 |
@@ -205,7 +205,7 @@ description: Use when the user asks to scan, audit, or score a project's technic
 |------|------|------|
 | 标记注释得分极低 | 项目中遗留大量 TODO/FIXME | 排序 TODO 列表，优先修复 FIXME/HACK |
 | 大型项目得分偏低 | 密度未正确调整 | 增加 --density-cap 参数 |
-| 复杂度得分为 0 | 单个超大文件扣分过多 | 拆分超大文件（>800 行）为多个模块 |
+| 复杂度得分为 0 | 单个超大文件扣分过多 | 拆分超大文件（C/C++ >2500, 其他 >1000 行）为多个模块 |
 | 废弃 API 得分为 0 | 大量使用过时 API | 逐语言迁移到替代 API |
 | 扫描脚本无输出 | 项目无支持的源码文件 | 确认项目语言是否在支持列表中 |
 | 需要扫描多个目录 | 脚本只接受单个目录参数 | 每个目录单独执行一次脚本，不可一次传多个路径 |
@@ -216,6 +216,7 @@ description: Use when the user asks to scan, audit, or score a project's technic
 | 跨目录重复未被检测 | 检测范围只限同目录 | 检查是否有跨目录的 copy-paste |
 | 模板代码被误报 | 脚手架/生成器产生的相似文件 | 检查排除规则是否覆盖生成目录 |
 | 第三方代码被扫描 | `third_party/` 未在排除列表中 | 确认各脚本的 EXCLUDE_DIRS 包含 `third_party/` |
+| C++ 小文件被误报超大 | 脚本默认阈值对 C++ 偏低 | 使用 `--cpp-max 2500` 参数调整 C++ 文件阈值 |
 
 ## Scripts 自动化脚本
 
