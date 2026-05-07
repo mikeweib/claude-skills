@@ -1,6 +1,6 @@
 ---
 name: tech-debt-scanner
-description: Use when the user asks to scan, audit, or score a project's technical debt — e.g. "扫描技术债", "代码质量评分", "检查技术债", "tech debt audit", "工程健康度". Runs deterministic shell scripts to detect marker comments (TODO/FIXME/HACK), dead code, complexity violations, deprecated API usage and duplicate code across multiple languages (C/C++, Java, Python, JS/TS, Go, Rust, Swift, C#). Outputs a 0-100 score with A-F grade and per-category detailed report with file:line locations.
+description: Use when the user asks to scan, audit, or score a project's technical debt — e.g. "扫描技术债", "扫一下技术债", "看看技术债", "代码质量评分", "检查技术债", "tech debt audit", "工程健康度". Runs deterministic shell scripts to detect marker comments (TODO/FIXME/HACK), dead code, complexity violations, deprecated API usage and duplicate code across multiple languages (C/C++, Java, Python, JS/TS, Go, Rust, Swift, C#). Outputs a 0-100 score with A-F grade and per-category detailed report with file:line locations.
 ---
 
 # 技术债扫描
