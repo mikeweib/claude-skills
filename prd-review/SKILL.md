@@ -391,6 +391,17 @@ Step 2 逐维度审查（7 维度 × 统一流程）
 
 ## References 参考文件
 
+### 资源使用速查
+
+| 文件 | 加载时机 | 内部章节 | 在哪个 Step 使用 |
+|------|---------|---------|-----------------|
+| `review-checklist.md` | **始终** | 维度 1-7 检查清单 + 扣分规则 + 汇总表 + 信号质量扫描 | Step 2 每个维度、Step 3 汇总 |
+| `signal-quality-guide.md` | **每个维度结束时** | 两类问题（废话/假话）+ 五条检测规则 + 降级规则 + 报告呈现模板 | Step 2 信号质量扫描 |
+| `diagnostic-guide.md` | **条件：得分率 < 40%** | 各维度低分根因 + Common Issues 速查表 | Step 2 得分异常时、Step 4 改进路径 |
+| `system-event-inventory.md` | **条件：PRD 涉及客户端** | 移动端（5 类 30+ 事件）/ 桌面端（3 类 10+ 事件）/ Web 端（3 类 8+ 事件） | Step 2 维度 7（逻辑一致性）Step C 场景穷举 |
+
+### 文件详情
+
 - **[review-checklist.md](references/review-checklist.md)** — 7 维度检查清单速查表，含扣分规则和汇总表。**始终使用**
 - **[signal-quality-guide.md](references/signal-quality-guide.md)** — 信号质量扫描完整指南（两类问题示例、五条检测规则、降级规则）。**条件触发：** 每个维度审查结束时执行
 - **[diagnostic-guide.md](references/diagnostic-guide.md)** — 低分诊断指南（各维度得分低原因 + Common Issues 速查表）。**条件触发：** 维度得分率 < 40% 或整体不及格时查阅
