@@ -15,8 +15,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ├── SKILL.md              # 技能入口，包含 frontmatter 和完整指令
 ├── scripts/               # 自动化脚本（可选）
 │   └── <script>.sh        #   shell 脚本，输出 file:line 格式
-└── references/            # 参考资料（可选）
-    └── <reference>.md
+├── references/            # 参考资料（可选）
+│   └── <reference>.md
+└── eval/                  # 评估用例（可选，用于 skill-evolve 评估门控）
+    ├── eval-cases.json    #   评估用例定义
+    └── baseline.json      #   基线分数追踪
 ```
 
 **SKILL.md 要求：**
@@ -44,7 +47,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `harness-score` | Harness 工程评分：基于 ECC 规范对项目 agent harness 合规性打分（A-F 等级），逐类分析并给出改进建议 |
 | `gn-reviewer` | GN 构建文件审查：检查 BUILD.gn / .gni 的 import 路径、依赖声明、target 类型、config 作用域、visibility、testonly、WebRTC 模板使用 |
 | `tech-debt-scanner` | 技术债扫描：多语言标记注释/死代码/复杂度/废弃 API/重复代码五维度扫描，量化评分（A-F 等级） |
-| `prd-review` | 需求评审：对 PRD 和原型图进行 6 维度综合评审（完整性/清晰度/可行性/风险识别/可测试性/UX 一致性），输出 0-100 分和 A-F 等级，及格线 60 分 |
+| `prd-review` | 需求评审：对 PRD 和原型图进行 7 维度综合评审（完整性/清晰度/可行性/风险识别/可测试性/UX 一致性/逻辑一致性），输出 0-100 分和 A-F 等级，及格线 60 分 |
+| `skill-evolve` | Skill 进化元技能：读取 auto-memory 反馈，分析问题模式，生成改进建议，经人工确认后自动修改 skill 文件并记录进化历史 |
 
 ## 技能编写规范
 
@@ -55,9 +59,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 审查类技能应提供分步流程，按优先级排列，每步有明确的输入/输出
 - 如有关联脚本，在 SKILL.md 中添加 `## Scripts` 速查表，并在对应 Step 中通过 `**自动化：**` 引用
 
+**eval/ 目录：**
+- 存放评估用例（eval-cases.json）和基线分数（baseline.json），供 `skill-evolve` 评估门控使用
+- eval-cases.json: 描述各场景的输入、预期行为和分数区间
+- baseline.json: 跟踪上次验证的分数，变更后可对比是否退化
+- 审查/评分类 skill 建议至少包含 2 个用例（正常场景 + 异常场景）
+
+## Skill 进化
+
+`skill-evolve` 元技能管理所有自建 skill 的进化：
+
+```
+skill 进化 <skill-name>
+```
+
+进化流程：收集反馈 → 分析模式 → 评估门控 → 生成改进建议 → 人工审批 → 应用变更。所有 skill 当前处于 L3 完整进化级别（含反馈模板 + eval 用例）。
+
 ## 开发环境
 
-四个技能的软链接配置：
+技能软链接配置（共 6 个）：
 
 ```bash
 ln -s /Users/leigod/Documents/workspace/github/claude-skills/cpp-memory-safety ~/.claude/skills/cpp-memory-safety
@@ -65,6 +85,7 @@ ln -s /Users/leigod/Documents/workspace/github/claude-skills/gn-reviewer ~/.clau
 ln -s /Users/leigod/Documents/workspace/github/claude-skills/harness-score ~/.claude/skills/harness-score
 ln -s /Users/leigod/Documents/workspace/github/claude-skills/tech-debt-scanner ~/.claude/skills/tech-debt-scanner
 ln -s /Users/leigod/Documents/workspace/github/claude-skills/prd-review ~/.claude/skills/prd-review
+ln -s /Users/leigod/Documents/workspace/github/claude-skills/skill-evolve ~/.claude/skills/skill-evolve
 ```
 
 在此仓库修改技能文件后，Claude Code 立即生效，无需复制。

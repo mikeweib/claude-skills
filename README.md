@@ -24,7 +24,8 @@ ln -s $(pwd)/<skill-name> ~/.claude/skills/<skill-name>
 | [gn-reviewer](./gn-reviewer/SKILL.md) | GN 构建文件审查：import 路径、依赖声明、target 类型、config 作用域、visibility、testonly、WebRTC 模板 |
 | [harness-score](./harness-score/SKILL.md) | Harness 工程评分：基于 ECC 规范对项目 agent harness 合规性打分（A-F 等级），逐类分析并给出改进建议 |
 | [tech-debt-scanner](./tech-debt-scanner/SKILL.md) | 技术债扫描：多语言标记注释/死代码/复杂度/废弃 API/重复代码五维度扫描，量化评分（A-F 等级），输出逐类详细报告 |
-| [prd-review](./prd-review/SKILL.md) | 需求评审：对 PRD 和原型图进行 6 维度综合评审（完整性/清晰度/可行性/风险识别/可测试性/UX 一致性），输出 0-100 分和 A-F 等级，及格线 60 分 |
+| [prd-review](./prd-review/SKILL.md) | 需求评审：对 PRD 和原型图进行 7 维度综合评审（完整性/清晰度/可行性/风险识别/可测试性/UX 一致性/逻辑一致性），输出 0-100 分和 A-F 等级，及格线 60 分 |
+| [skill-evolve](./skill-evolve/SKILL.md) | Skill 进化元技能：读取 auto-memory 反馈，分析问题模式，评估门控防退化，经人工确认后自动修改 skill 文件并记录进化历史 |
 
 ## 技能结构
 
@@ -33,8 +34,11 @@ ln -s $(pwd)/<skill-name> ~/.claude/skills/<skill-name>
 ├── SKILL.md              # 技能入口，frontmatter + 完整指令
 ├── scripts/               # 自动化检测脚本（可选）
 │   └── *.sh               #   shell 脚本，输出 file:line 格式
-└── references/            # 参考资料（可选）
-    └── *.md               #   代码示例、速查表、约定说明
+├── references/            # 参考资料（可选）
+│   └── *.md               #   代码示例、速查表、约定说明
+└── eval/                  # 评估用例（可选，用于 skill-evolve 评估门控）
+    ├── eval-cases.json    #   评估用例定义
+    └── baseline.json      #   基线分数追踪
 ```
 
 ## 自动化脚本
@@ -76,6 +80,27 @@ ln -s $(pwd)/<skill-name> ~/.claude/skills/<skill-name>
 |------|------|
 | `preflight-check.sh [project_dir]` | 评分前环境预检 |
 
+## Skill 进化
+
+`skill-evolve` 是一个元技能，通过结构化反馈循环让所有技能自进化：
+
+```
+skill 进化 <skill-name>
+```
+
+**进化流程：** 收集反馈 → 分析模式 → 评估门控（防退化）→ 生成改进建议 → 人工审批 → 应用变更并记录进化历史。
+
+**接入级别：** 所有 5 个技能均已达到 L3 完整进化级别（含专用反馈模板 + eval 用例）。
+
+## Eval 系统
+
+每个技能可附带 `eval/` 目录，包含：
+
+- **eval-cases.json** — 定义评估用例：描述输入场景、预期行为、分数区间
+- **baseline.json** — 跟踪上次验证的基线分数
+
+skill-evolve 在应用变更前，会运行评估门控——用 eval 用例预评估变更影响，检测退化风险。
+
 ## 贡献
 
 添加新技能时，参照现有技能的目录结构：
@@ -84,6 +109,7 @@ ln -s $(pwd)/<skill-name> ~/.claude/skills/<skill-name>
 2. 编写 `SKILL.md`（YAML frontmatter + 中文正文）
 3. 可选添加 `scripts/` 自动化脚本（遵循 file:line 输出格式）
 4. 可选添加 `references/` 参考资料
+5. 可选添加 `eval/` 评估用例（接入 skill-evolve 评估门控）
 
 ## License
 

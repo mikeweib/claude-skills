@@ -1,0 +1,53 @@
+[
+  {
+    "id": "eval-001",
+    "name": "配置完善的项目",
+    "description": "安装了 ECC、有 CLAUDE.md、settings.json、测试、CI、SECURITY.md、.gitignore 的项目",
+    "inputType": "well-configured-project",
+    "expectedTotalRange": { "min": 23, "max": 29 },
+    "expectedGradeRange": ["A", "B"],
+    "expectedBehaviors": [
+      "7 个类别均有得分",
+      "Tool Coverage 和 Context Efficiency 接近满分",
+      "改进路线图为空或仅少量建议"
+    ]
+  },
+  {
+    "id": "eval-002",
+    "name": "未安装 ECC 的裸项目",
+    "description": "完全没有 ECC 插件、无 .claude/ 目录、无测试、无 CI 的项目",
+    "inputType": "bare-project",
+    "expectedTotalRange": { "min": 0, "max": 8 },
+    "expectedGradeRange": ["D", "F"],
+    "expectedBehaviors": [
+      "Tool Coverage 得分为 0 或接近 0",
+      "提示安装 ECC 插件",
+      "建议至少创建 CLAUDE.md 和 settings.json"
+    ]
+  },
+  {
+    "id": "eval-003",
+    "name": "Consumer 模式最低配置",
+    "description": "安装了 ECC 但仅有基础 CLAUDE.md 的 consumer 项目",
+    "inputType": "minimal-consumer",
+    "expectedTotalRange": { "min": 9, "max": 18 },
+    "expectedGradeRange": ["C", "D"],
+    "expectedBehaviors": [
+      "Tool Coverage 有基础分数（ECC 已安装）",
+      "多个类别缺失（Security/Quality Gates/Memory Persistence）",
+      "改进路线图有具体建议"
+    ]
+  },
+  {
+    "id": "eval-004",
+    "name": "ECC Repo 模式",
+    "description": "对 ECC 插件仓库本身评分（repo 模式，满分 70）",
+    "inputType": "ecc-repo-mode",
+    "expectedBehaviors": [
+      "识别为 repo 模式而非 consumer 模式",
+      "满分显示为 70",
+      "检查项包含 repo 特有项"
+    ],
+    "notes": "验证模式切换逻辑是否正常，不约束具体分数"
+  }
+]

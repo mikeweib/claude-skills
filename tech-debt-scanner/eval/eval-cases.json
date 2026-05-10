@@ -1,0 +1,90 @@
+[
+  {
+    "id": "eval-001",
+    "name": "清洁项目扫描",
+    "description": "代码质量良好的中小型项目，TODO 密度 <1/千行，无 FIXME/HACK，函数 <30 行，无废弃 API",
+    "inputType": "clean-project",
+    "expectedScoreRanges": {
+      "markerComments":  { "min": 16, "max": 20 },
+      "deadCode":         { "min": 16, "max": 20 },
+      "complexity":       { "min": 16, "max": 20 },
+      "deprecatedApi":    { "min": 16, "max": 20 },
+      "duplicateCode":    { "min": 16, "max": 20 }
+    },
+    "expectedTotalRange": { "min": 80, "max": 100 },
+    "expectedGradeRange": ["A", "B"],
+    "expectedBehaviors": [
+      "5 类别完整报告",
+      "改进路线图为空或仅少量建议"
+    ]
+  },
+  {
+    "id": "eval-002",
+    "name": "高负债项目扫描",
+    "description": "遗留大量 FIXME/HACK、大段注释代码、超大文件、废弃 API、重复代码的项目",
+    "inputType": "debt-heavy-project",
+    "expectedScoreRanges": {
+      "markerComments":  { "min": 0,  "max": 8 },
+      "deadCode":         { "min": 0,  "max": 8 },
+      "complexity":       { "min": 0,  "max": 8 },
+      "deprecatedApi":    { "min": 0,  "max": 8 },
+      "duplicateCode":    { "min": 0,  "max": 8 }
+    },
+    "expectedTotalRange": { "min": 0, "max": 35 },
+    "expectedGradeRange": ["D", "F"],
+    "expectedBehaviors": [
+      "Top 5 问题明确列出最严重发现",
+      "改进路线图按 ROI 排序",
+      "每个类别有具体 file:line 定位"
+    ]
+  },
+  {
+    "id": "eval-003",
+    "name": "空项目或无可识别源码",
+    "description": "目录中无可识别的源码文件（仅配置文件或空目录）",
+    "inputType": "empty-project",
+    "expectedScoreRanges": {
+      "markerComments":  { "min": 20, "max": 20 },
+      "deadCode":         { "min": 20, "max": 20 },
+      "complexity":       { "min": 20, "max": 20 },
+      "deprecatedApi":    { "min": 20, "max": 20 },
+      "duplicateCode":    { "min": 20, "max": 20 }
+    },
+    "expectedTotalRange": { "min": 90, "max": 100 },
+    "expectedGradeRange": ["A"],
+    "expectedBehaviors": [
+      "检测到无源码文件",
+      "脚本优雅退出而非报错",
+      "报告注明无可扫描的源码文件"
+    ]
+  },
+  {
+    "id": "eval-004",
+    "name": "包含大量第三方代码的项目",
+    "description": "项目包含 third_party/、node_modules/ 等大量第三方代码",
+    "inputType": "third-party-heavy-project",
+    "expectedBehaviors": [
+      "正确排除 third_party/ 目录",
+      "正确排除 node_modules/ 目录",
+      "正确排除 build/ 等构建产物目录",
+      "仅报告本项目代码的技术债"
+    ],
+    "notes": "此用例验证排除规则是否正确执行，不约束具体分数"
+  },
+  {
+    "id": "eval-005",
+    "name": "单语言超大型项目",
+    "description": "C++ 项目单个文件 >2500 行，函数 >50 行，嵌套 >=4 层",
+    "inputType": "large-cpp-project",
+    "expectedScoreRanges": {
+      "complexity":       { "min": 0, "max": 10 }
+    },
+    "expectedTotalRange": { "min": 40, "max": 75 },
+    "expectedGradeRange": ["C", "D"],
+    "expectedBehaviors": [
+      "复杂度类别得分显著偏低",
+      "正确使用 C++ 阈值（2500 行）而非通用阈值（1000 行）",
+      "报告列出具体的超大文件和长函数"
+    ]
+  }
+]

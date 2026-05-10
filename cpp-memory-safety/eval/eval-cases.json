@@ -1,0 +1,60 @@
+[
+  {
+    "id": "eval-001",
+    "name": "现代 C++ 代码审查",
+    "description": "完全使用 unique_ptr/shared_ptr、STL 容器、无裸 new/delete 的现代 C++ 代码",
+    "inputType": "modern-cpp",
+    "expectedBehaviors": [
+      "Step 1 裸内存操作扫描：无发现或极少发现",
+      "Step 3 Smart Pointer 选择：无 shared_ptr 过度使用",
+      "整体报告：无 CRITICAL 或 HIGH 问题",
+      "可能仅有 LOW 级别建议"
+    ]
+  },
+  {
+    "id": "eval-002",
+    "name": "遗留 C++ 代码审查（裸指针密集）",
+    "description": "大量 raw pointer、new/delete 手工管理、缺少 smart pointer 的老式 C++ 代码",
+    "inputType": "legacy-raw-pointer-cpp",
+    "expectedBehaviors": [
+      "检测到裸 new/delete 配对问题",
+      "建议改用 unique_ptr/shared_ptr",
+      "检查 Rule of Five 违规",
+      "问题严重性包含 HIGH 级别"
+    ]
+  },
+  {
+    "id": "eval-003",
+    "name": "WebRTC 项目 std::shared_ptr 误用",
+    "description": "依赖 WebRTC 的项目中使用了 std::shared_ptr 而非 rtc::scoped_refptr",
+    "inputType": "webrtc-shared-ptr-misuse",
+    "expectedBehaviors": [
+      "必须检测到 std::shared_ptr 使用",
+      "必须提示 WebRTC 项目应用 rtc::scoped_refptr",
+      "问题严重性标记为 HIGH（控制块不兼容导致 double-free 或泄漏）"
+    ],
+    "notes": "这是 WebRTC 项目最常见的错误之一，漏检会导致严重的运行时 bug"
+  },
+  {
+    "id": "eval-004",
+    "name": "Rule of Five 违规",
+    "description": "class 有 raw pointer 成员但缺少自定义 copy/move 构造函数和赋值运算符",
+    "inputType": "rule-of-five-violation",
+    "expectedBehaviors": [
+      "检测到 Rule of Five 不完整",
+      "警告浅拷贝可能导致 double-free",
+      "建议补充或 = delete 缺失的特殊成员函数"
+    ]
+  },
+  {
+    "id": "eval-005",
+    "name": "悬空指针风险",
+    "description": "delete 后未置 nullptr 且后续有使用路径、返回局部变量地址",
+    "inputType": "dangling-pointer",
+    "expectedBehaviors": [
+      "检测到 delete 后继续使用",
+      "检测到返回局部变量地址",
+      "问题严重性标记为 CRITICAL 或 HIGH"
+    ]
+  }
+]

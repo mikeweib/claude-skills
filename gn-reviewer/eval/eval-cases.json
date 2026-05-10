@@ -1,0 +1,57 @@
+[
+  {
+    "id": "eval-001",
+    "name": "规范的 BUILD.gn 文件",
+    "description": "import 路径正确、target 类型正确使用、deps/public_deps 正确区分、config 传播合理、testonly 正确标记",
+    "inputType": "clean-build-gn",
+    "expectedBehaviors": [
+      "无 CRITICAL 或 HIGH 问题",
+      "可能仅有 LOW 级别风格建议",
+      "所有 import 验证通过"
+    ]
+  },
+  {
+    "id": "eval-002",
+    "name": "deps/public_deps 混淆",
+    "description": "public header 中 include 了某模块的 header，但该模块在 deps 而非 public_deps 中",
+    "inputType": "deps-confusion",
+    "expectedBehaviors": [
+      "必须检测到 deps/public_deps 混淆",
+      "问题严重性标记为 HIGH 或 CRITICAL",
+      "报告明确指出是哪个 public header 引用了哪个模块",
+      "建议将 deps 改为 public_deps"
+    ],
+    "notes": "这是最常见的 GN 错误，漏检即为审查失败"
+  },
+  {
+    "id": "eval-003",
+    "name": "缺少 WebRTC import",
+    "description": "BUILD.gn 中使用了 rtc_source_set 模板但未 import webrtc.gni",
+    "inputType": "missing-webrtc-import",
+    "expectedBehaviors": [
+      "检测到使用了 rtc_source_set/rtc_static_library 但缺少 import",
+      "建议添加 import(\"//webrtc.gni\")"
+    ]
+  },
+  {
+    "id": "eval-004",
+    "name": "testonly 泄漏",
+    "description": "testonly = true 的 target 被非测试 target 依赖，或缺少测试开关 guard",
+    "inputType": "testonly-leak",
+    "expectedBehaviors": [
+      "检测到 testonly 泄漏",
+      "问题严重性标记为 HIGH",
+      "建议添加 testonly 标记或 guard 条件"
+    ]
+  },
+  {
+    "id": "eval-005",
+    "name": "重复 config 块",
+    "description": "多个 target 内联了相同的 cflags/ldflags 块",
+    "inputType": "duplicate-configs",
+    "expectedBehaviors": [
+      "检测到跨 target 重复的 flags 块",
+      "建议抽取为 config() 统一引用"
+    ]
+  }
+]

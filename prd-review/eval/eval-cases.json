@@ -1,0 +1,161 @@
+[
+  {
+    "id": "eval-001",
+    "name": "完整 PRD 评审",
+    "description": "包含背景、用户故事、功能范围、异常流程、验收标准、原型图的完整 Markdown PRD",
+    "inputType": "full-markdown-prd",
+    "expectedScoreRanges": {
+      "completeness":  { "min": 12, "max": 18 },
+      "clarity":        { "min": 12, "max": 18 },
+      "feasibility":    { "min": 8,  "max": 13 },
+      "risk":           { "min": 8,  "max": 13 },
+      "testability":    { "min": 8,  "max": 13 },
+      "uxConsistency":  { "min": 8,  "max": 13 },
+      "logicConsistency": { "min": 7, "max": 12 }
+    },
+    "expectedTotalRange": { "min": 70, "max": 92 },
+    "expectedGradeRange": ["A", "B"],
+    "expectedBehaviors": [
+      "7 维度完整评审报告",
+      "信号质量扫描检测少量废话",
+      "改进路径为空或少量建议补充项"
+    ]
+  },
+  {
+    "id": "eval-002",
+    "name": "极简 PRD",
+    "description": "仅功能列表的 PRD（< 100 字），无用户故事/异常流程/验收标准/非功能性需求",
+    "inputType": "minimal-prd",
+    "expectedScoreRanges": {
+      "completeness":  { "min": 0,  "max": 7 },
+      "clarity":        { "min": 0,  "max": 7 },
+      "feasibility":    { "min": 0,  "max": 7 },
+      "risk":           { "min": 0,  "max": 7 },
+      "testability":    { "min": 0,  "max": 7 },
+      "uxConsistency":  { "min": 0,  "max": 7 },
+      "logicConsistency": { "min": 0, "max": 7 }
+    },
+    "expectedTotalRange": { "min": 0, "max": 35 },
+    "expectedGradeRange": ["D", "F"],
+    "expectedBehaviors": [
+      "完整性/清晰度得分极低（< 40%）",
+      "Top 5 问题明确列出缺失项（背景/功能范围/用户故事/异常流程/验收标准）",
+      "改进路径包含具体补充建议",
+      "⚠️ 警告：PRD 内容过短，缺少核心章节"
+    ]
+  },
+  {
+    "id": "eval-003",
+    "name": "原型图 + 文字描述",
+    "description": "提供原型截图 + 一段需求描述文字，无正式 PRD 文档",
+    "inputType": "prototype-with-description",
+    "expectedScoreRanges": {
+      "completeness":  { "min": 0,  "max": 18 },
+      "clarity":        { "min": 0,  "max": 9 },
+      "feasibility":    { "min": 0,  "max": 13 },
+      "risk":           { "min": 0,  "max": 13 },
+      "testability":    { "min": 0,  "max": 13 },
+      "uxConsistency":  { "min": 0,  "max": 13 },
+      "logicConsistency": { "min": 0, "max": 12 }
+    },
+    "expectedTotalRange": null,
+    "expectedGradeRange": null,
+    "expectedBehaviors": [
+      "标注 '⚠️ 非正式 PRD 格式' 或 '⚠️ 评估不完整'",
+      "清晰度维度权重降至 50%（上限 9 分）",
+      "总分标注'仅供参考'",
+      "仅基于可评估维度打分"
+    ],
+    "notes": "精确总分取决于原型图内容，不做硬性区间约束"
+  },
+  {
+    "id": "eval-004",
+    "name": "仅原型图",
+    "description": "仅提供原型截图，无 PRD 文本",
+    "inputType": "prototype-only",
+    "expectedScoreRanges": {
+      "completeness":  { "min": null, "max": null },
+      "clarity":        { "min": null, "max": null },
+      "feasibility":    { "min": null, "max": null },
+      "risk":           { "min": 0,  "max": 13 },
+      "testability":    { "min": 0,  "max": 13 },
+      "uxConsistency":  { "min": 0,  "max": 13 },
+      "logicConsistency": { "min": 0, "max": 12 }
+    },
+    "expectedTotalRange": null,
+    "expectedGradeRange": null,
+    "expectedBehaviors": [
+      "完整性/清晰度/可行性标注 N/A（不可评估）",
+      "报告标注 '⚠️ 评估不完整：因缺少 PRD 文档，完整性/清晰度/可行性维度无法完整评审'",
+      "总分 = 可评估维度得分 ÷ 可评估维度满分 × 100"
+    ],
+    "notes": "精确总分取决于原型图内容，但报告必须标注评估不完整"
+  },
+  {
+    "id": "eval-005",
+    "name": "PDF/Word 格式 PRD",
+    "description": "PRD 以 PDF 或 Word 格式提供，需要尝试读取",
+    "inputType": "non-markdown-prd",
+    "expectedScoreRanges": {
+      "completeness":  { "min": 0,  "max": 18 },
+      "clarity":        { "min": 0,  "max": 18 },
+      "feasibility":    { "min": 0,  "max": 13 },
+      "risk":           { "min": 0,  "max": 13 },
+      "testability":    { "min": 0,  "max": 13 },
+      "uxConsistency":  { "min": 0,  "max": 13 },
+      "logicConsistency": { "min": 0, "max": 12 }
+    },
+    "expectedTotalRange": null,
+    "expectedGradeRange": null,
+    "expectedBehaviors": [
+      "如成功读取：标注 'ℹ️ 输入格式：[PDF/Word]'，正常评分",
+      "如无法读取：明确告知原因（路径错误/不支持格式），暂停评审"
+    ],
+    "notes": "行为取决于文件是否可读，不约束具体分数"
+  },
+  {
+    "id": "eval-006",
+    "name": "多个 PRD 文件",
+    "description": "用户同时提供 2 个以上 PRD 文件要求评审",
+    "inputType": "multiple-prd-files",
+    "expectedScoreRanges": {
+      "completeness":  { "min": 0,  "max": 18 },
+      "clarity":        { "min": 0,  "max": 18 },
+      "feasibility":    { "min": 0,  "max": 13 },
+      "risk":           { "min": 0,  "max": 13 },
+      "testability":    { "min": 0,  "max": 13 },
+      "uxConsistency":  { "min": 0,  "max": 13 },
+      "logicConsistency": { "min": 0, "max": 12 }
+    },
+    "expectedTotalRange": null,
+    "expectedGradeRange": null,
+    "expectedBehaviors": [
+      "报告标注 'ℹ️ 共 N 个文件，以下为 [文件名] 的独立评审报告'",
+      "每个文件独立评分，不合并",
+      "每个文件独立输出报告"
+    ],
+    "notes": "确认报告结构正确（每文件独立报告），不计较单个文件的具体分数"
+  },
+  {
+    "id": "eval-007",
+    "name": "对话式非正式 PRD",
+    "description": "用户在对话中直接贴出需求内容，无明确章节结构",
+    "inputType": "conversational-prd",
+    "expectedScoreRanges": {
+      "completeness":  { "min": 0,  "max": 18 },
+      "clarity":        { "min": 0,  "max": 9 },
+      "feasibility":    { "min": 0,  "max": 13 },
+      "risk":           { "min": 0,  "max": 13 },
+      "testability":    { "min": 0,  "max": 13 },
+      "uxConsistency":  { "min": 0,  "max": 13 },
+      "logicConsistency": { "min": 0, "max": 12 }
+    },
+    "expectedTotalRange": null,
+    "expectedGradeRange": null,
+    "expectedBehaviors": [
+      "报告标注 '⚠️ 非正式 PRD 格式：以下评分基于对话中的需求描述，仅供参考'",
+      "清晰度维度权重降至 50%（上限 9 分），报告注明扣分理由"
+    ],
+    "notes": "总分取决于内容，但格式标注+清晰度权重调整是强制行为"
+  }
+]
