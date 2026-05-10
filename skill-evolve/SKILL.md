@@ -199,6 +199,31 @@ description: Meta-skill for skill auto-evolution with eval gating and rollback. 
 2. 在 `skill-evolve/evolution-log/` 创建进化记录（格式见 `references/skill-evolve-guide.md` 进化记录格式章节）
 3. 更新 `evolution-log/INDEX.md`
 
+### Step 4.5: darwin-skill 评分验证
+
+> 如果系统安装了 darwin-skill，变更应用后自动验证 skill 质量未退化。未安装则跳过。
+
+**触发条件：** `~/.claude/skills/darwin-skill/` 目录存在。
+
+**流程：**
+
+1. 读取 `~/.claude/skills/darwin-skill/results.tsv`，查找目标 skill 的最新基线分数
+2. 按 darwin-skill 8 维度 rubric 重新评分（结构维度静态分析 + 效果维度 dry-run）
+3. 对比新旧分数：
+
+| 结果 | 行为 |
+|------|------|
+| 分数提升或持平 | 记录新基线到 results.tsv，进化完成 ✅ |
+| 分数下降 ≤ 2 分 | 展示退化维度明细，标注 ⚠️ warning，询问用户 |
+| 分数下降 > 2 分 | 展示退化维度明细，标注 🔴 建议回滚，询问用户 |
+
+**分数下降时的用户决策：**
+- "保持进化" → 记录新基线（分数下降但用户接受）
+- "回滚" → 进入 Step 5 回滚流程
+- "分析原因" → 展开退化维度根因分析，再决定
+
+**无基线时：** 记录首次基线分数，跳过对比。
+
 ### Step 5: 回滚
 
 > 当进化后的 skill 效果不佳、引入退化、或用户改变主意时，回滚到进化前的状态。
@@ -295,6 +320,7 @@ description: Meta-skill for skill auto-evolution with eval gating and rollback. 
 - [ ] 变更已获用户批准，未跳过确认步骤
 - [ ] 备份快照已创建（变更应用前）
 - [ ] 进化记录已写入 `evolution-log/`（含备份路径）
+- [ ] darwin-skill 评分验证已完成（已安装则必须跑，分数下降需用户决策）
 
 ### 回滚流程
 - [ ] 回滚点列表已展示，用户已选择目标版本
@@ -318,6 +344,7 @@ description: Meta-skill for skill auto-evolution with eval gating and rollback. 
 | 目标 skill 无专用 feedback-template | 使用通用模板 | `skill-evolve/references/feedback-template.md` |
 | 目标 skill 无 eval 用例 | 跳过 Step 3.5 | 标注 "⚠️ 无 eval 用例" |
 | 评估门控 🔴 blocked | 要求用户显式确认覆盖 | 普通"是"不生效 |
+| 系统安装了 darwin-skill | 变更应用后自动评分 | 分数下降 > 2 分建议回滚 |
 | 同一 skill 反馈 >= 3 条 | 主动提示进化 | 会话结束前或下次对话开始时触发 |
 
 ### 回滚速查
@@ -338,6 +365,7 @@ description: Meta-skill for skill auto-evolution with eval gating and rollback. 
 | 反馈数量太少（< 2 条）| 降低置信度，只生成低风险的措辞/示例改进 |
 | 改进建议涉及多个文件 | 按依赖顺序排列，先改 SKILL.md 再改 references |
 | eval 用例过时或覆盖不全 | 标注 `⚠️ eval 覆盖不完整`，降低门控拦截力度 |
+| darwin-skill 评分下降 | 展开退化维度明细，> 2 分建议回滚，≤ 2 分由用户决定是否保持 |
 
 ### 回滚
 | 问题 | 处理方式 |
