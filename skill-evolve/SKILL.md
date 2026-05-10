@@ -40,59 +40,9 @@ description: Meta-skill for skill auto-evolution with eval gating and rollback. 
 
 ## New Skill Bootstrapping 新 Skill 接入
 
-任何已有 skill 都可以零成本接入 skill-evolve 管理。要获得完整进化能力（含评估门控），需要补充 3 个可选文件：
+任何已有 skill 零成本接入，3 级递进：**L1 基础**（zero-config）→ **L2 结构化反馈**（添加 `feedback-template.md`）→ **L3 完整进化**（添加 `eval/` 用例，启用评估门控）。当前 5 个 skill 均已达到 L3。
 
-```
-<skill-name>/
-├── references/
-│   └── feedback-template.md    # 可选：skill 专用的反馈模板（有针对性的字段）
-└── eval/
-    ├── eval-cases.json          # 可选：评估用例（用于回归检测）
-    └── baseline.json            # 可选：基线分数
-```
-
-### 接入级别
-
-| 级别 | 需要的文件 | 获得的能力 |
-|------|-----------|-----------|
-| **L1 基础** | 无（zero-config） | 反馈收集 + 模式分析 + 改进建议 + 人工审批 |
-| **L2 结构化反馈** | `references/feedback-template.md` | 上述 + 反馈自动结构化解析 |
-| **L3 完整进化** | L2 + `eval/eval-cases.json` + `eval/baseline.json` | 上述 + 评估门控（变更前自动检测退化风险） |
-
-### 快速接入步骤
-
-**Step 1（L1 — 零配置接入）：**
-skill-evolve 自动发现 auto-memory 中匹配的 feedback，无需任何配置。
-```
-skill 进化 <skill-name>
-```
-
-**Step 2（L2 — 添加专用反馈模板）：**
-从 `skill-evolve/references/feedback-template.md` 复制通用模板到 skill 目录，按 skill 领域定制字段。
-```
-cp skill-evolve/references/feedback-template.md <skill-name>/references/
-# 编辑模板，将"涉及维度"改为 skill 特有的评估维度
-```
-
-**Step 3（L3 — 添加 eval 用例）：**
-参考 `prd-review/eval/eval-cases.json` 的格式，为 skill 创建边界场景用例。
-```
-mkdir -p <skill-name>/eval
-cp prd-review/eval/baseline.json <skill-name>/eval/
-# 编辑 eval-cases.json，描述每个用例的输入和预期行为
-```
-
-> **1 个 eval 用例即可见效**：不需要像 prd-review 那样 7 个用例。即使只有 1 个用例覆盖核心场景，评估门控就能标记该场景的退化风险。
-
-### 已接入 skill 状态
-
-| Skill | 接入级别 | feedback-template | eval 用例 |
-|-------|---------|-------------------|----------|
-| prd-review | L3 完整进化 | ✅ 专用模板 | ✅ 7 个用例 |
-| tech-debt-scanner | L3 完整进化 | ✅ 专用模板 | ✅ 5 个用例 |
-| gn-reviewer | L3 完整进化 | ✅ 专用模板 | ✅ 5 个用例 |
-| cpp-memory-safety | L3 完整进化 | ✅ 专用模板 | ✅ 5 个用例 |
-| harness-score | L3 完整进化 | ✅ 专用模板 | ✅ 4 个用例 |
+> **接入步骤和已接入 skill 状态：** 详见 `references/skill-evolve-guide.md` 快速开始章节。
 
 ---
 
@@ -130,16 +80,7 @@ cp prd-review/eval/baseline.json <skill-name>/eval/
 
 ### Step 2: 分析反馈模式
 
-按问题类型分组。分类体系详见 `references/skill-evolve-guide.md`：
-
-| 类型 | 说明 | 典型信号 |
-|------|------|---------|
-| **terminology-calibration** | 术语/概念适用范围校准 | 某个检查项对不该扣分的内容扣了分 |
-| **threshold-adjustment** | 阈值/边界调整 | 扣分值、权重、得分率门槛不合理 |
-| **checklist-update** | 检查清单增删 | 漏检或检查项过时 |
-| **trigger-refinement** | 触发条件细化 | 该触发却未触发，或不该触发却触发了 |
-| **diagnostic-enhancement** | 边界/诊断规则增强 | 边界场景处理不当，诊断指南缺少内容 |
-| **example-addition** | 示例补充 | 缺少具体示例导致判断不一致 |
+按问题类型分组（6 类详解见 `references/skill-evolve-guide.md`）。
 
 **分析输出——对每组反馈：**
 - 根因：是 SKILL.md 哪个章节/段落的哪个规则导致的问题
@@ -147,29 +88,52 @@ cp prd-review/eval/baseline.json <skill-name>/eval/
 - 严重程度：**高**（评分失真或系统性误判）、**中**（一致性问题但非致命）、**低**（措辞/示例优化）
 - 优先级排序：高 > 中 > 低；同等级按反馈数量排序
 
+### Step 2.5: 分析结果确认（检查点）
+
+在进入建议生成之前，**暂停并展示分析结果**，等待用户确认分析方向是否正确：
+
+```
+## 反馈分析结果（待确认）
+
+### 反馈概览
+| 来源 | 条数 | 时间范围 |
+|------|------|---------|
+| auto-memory | 3 | 2026-05-01 ~ 2026-05-10 |
+| 对话输入 | 1 | 2026-05-10 |
+
+### 按问题类型分组
+
+| 类型 | 条数 | 严重度 | 涉及 skill 章节 | 典型反馈摘要 |
+|------|------|--------|----------------|-------------|
+| checklist-update | 2 | 高 | 维度 4 风险识别 | 缺少风控误伤预案检查 |
+| terminology-calibration | 1 | 中 | 维度 2 清晰度 | 行业通用术语被误扣分 |
+| example-addition | 1 | 低 | 维度 7 逻辑一致性 | 冲突矩阵缺少示例 |
+
+### 优先级排序
+1. **[高] checklist-update** — 2 条反馈指向同一问题，建议合并为一个建议
+2. **[中] terminology-calibration** — 1 条反馈
+3. **[低] example-addition** — 1 条反馈（不强制生成 diff）
+
+是否按以上分组和优先级生成改进建议？
+- "确认" / "OK" → 进入 Step 3 生成建议
+- "类型 X 应该是 Y" → 调整分组
+- "先只看高严重度" → 只对选定的严重度生成建议
+- "忽略 #N" → 排除指定反馈组
+```
+
+**检查点的核心价值：** 在生成具体的 diff 之前纠正分析方向。分组错误会导致后续所有建议偏离，此时纠正成本最低。
+
+**用户可能的回应：**
+- "确认" → 进入 Step 3
+- "类型 X 不对，应该是 Y" → 调整分组后重新展示
+- "忽略低严重度，只看高的" → 过滤后进入 Step 3
+- "反馈 #3 实际是误报，不要处理" → 移除该反馈组
+
+> **跳过条件：** 如果只有 1 条反馈且问题类型明确，可跳过此检查点直接进入 Step 3。但需在分析输出中标注"单条反馈，跳过分析确认"。
+
 ### Step 3: 生成改进建议
 
-为每个高/中严重度组生成变更建议。低严重度组列出但不强制生成 diff。
-
-**每个建议的格式：**
-
-```
-### 建议 #N: [简短标题]
-
-- **问题类型:** [类型]
-- **关联反馈:** [反馈文件/会话 ID]
-- **严重程度:** [高/中/低]
-- **目标文件:** [路径]
-- **目标位置:** [章节/行号]
-
-**变更内容:**
---- 原内容
-[当前 SKILL.md 或 reference 中的原文]
-+++ 新内容
-[建议修改后的内容]
-
-**理由:** [1-2 句话说明为什么这样改]
-```
+为每个高/中严重度组生成变更建议（格式规范见 `references/skill-evolve-guide.md` Diff 呈现规范章节）。低严重度组列出但不强制生成 diff。
 
 **建议排序规则：**
 1. 高严重度优先
@@ -180,44 +144,18 @@ cp prd-review/eval/baseline.json <skill-name>/eval/
 
 ### Step 3.5: 评估门控（Eval Gating）
 
-> 在提交变更给用户审批前，用 eval 用例验证变更不会导致退化。此步骤受 Hermes Agent 的约束门控机制启发——"改完后跑测试，分数下降就拒绝"。
+> 提交审批前，用 eval 用例验证变更不会导致退化。无 eval 用例则跳过。
 
-**前提检查：**
-1. 检查目标 skill 是否存在 `eval/eval-cases.json` 和 `eval/baseline.json`
-2. 如果不存在 → 跳过此步骤，标注 `⚠️ 该 skill 暂无 eval 用例，跳过自动评估`
-3. 如果存在 → 执行以下评估流程
+**流程：** 读取 baseline → 预评估每个建议对 eval 用例的影响方向（↑/↓/→）→ 门控决策：
 
-**评估流程：**
+| 级别 | 条件 | 行为 |
+|------|------|------|
+| 🟢 passed | 全部用例预期不变或提升 | 正常进入审批 |
+| 🟡 warning | 非核心用例可能下降 | 进入审批，标注风险 |
+| 🔴 blocked | 核心用例（eval-001/002）预期下降 | 阻止自动审批，需用户显式覆盖 |
+| ⚠️ no-eval | 目标 skill 无 eval 用例 | 跳过 |
 
-1. **建立基线（pre-change baseline）：**
-   - 读取 `baseline.json` 中已有的历史分数作为参考基线
-   - 如果 baseline 为空，说明当前 skill 版本未经 eval 验证——标注 `ℹ️ 无历史基线，将当前变更后的首次评估结果作为新基线`
-
-2. **预评估变更影响（pre-check）：**
-   - 对每个改进建议，判断它可能影响哪些 eval 用例的哪些维度
-   - 列出受影响的 eval 用例和维度，标注预期影响方向（↑ 提升 / ↓ 可能下降 / → 无影响）
-
-3. **生成评估报告：**
-   ```
-   ## 评估门控报告
-   
-   | Eval 用例 | 受影响维度 | 预期影响 | 基线分数 | 风险 |
-   |-----------|-----------|---------|---------|------|
-   | eval-001 | 清晰度 | ↑ 提升 | 14/18 | 🟢 低 |
-   | eval-003 | 清晰度 | ↓ 可能下降 | 5/9 | 🟡 中 |
-   
-   **整体风险评估：**
-   - 🟢 低风险：全部用例预期不变或提升
-   - 🟡 中风险：有用例可能下降，但核心用例（eval-001/002）无影响
-   - 🔴 高风险：核心用例预期下降
-   ```
-
-4. **门控决策：**
-   - 🟢 → 正常进入 Step 4（标记 "eval: passed"）
-   - 🟡 → 进入 Step 4 但标注风险警告（标记 "eval: warning"），提醒用户关注特定维度
-   - 🔴 → 进入 Step 4 但强制标注 "eval: blocked"，要求用户显式确认覆盖
-
-> **Hermes 对比：** Hermes 用 GEPA 遗传算法自动跑分 + 约束门控自动拦截。skill-evolve 目前用 LLM 做预评估（基于改进建议的性质推断影响方向），因为 eval 用例通常没有预设的测试数据可以自动化运行。当 eval 用例配有具体测试 PRD 文件后，可以升级为实际跑分验证。
+> 门控详情（基线建立、影响推断规则、核心用例定义、用户覆盖后果）：详见 `references/skill-evolve-guide.md` 评估门控章节。
 
 ### Step 4: 确认并应用
 
@@ -245,16 +183,10 @@ cp prd-review/eval/baseline.json <skill-name>/eval/
 
 **批准后执行：**
 
-0. **创建备份快照（回滚点）：**
-   - 在 `skill-evolve/evolution-log/<skill-name>/backups/<YYYY-MM-DD-<slug>>/` 创建备份目录
-   - 对每个即将修改的目标文件，用 Read 读取完整内容，保存为备份文件
-   - 备份文件命名：将目标文件的相对路径中的 `/` 替换为 `_`（如 `prd-review_SKILL.md`）
-   - 在进化记录中标注备份路径
-
-1. 用 Edit 工具对目标文件逐一应用变更
-2. 每应用一个变更后验证文件完整性
-3. 全部应用后在 `skill-evolve/evolution-log/` 创建进化记录（含备份路径和变更详情）
-4. 更新 `evolution-log/INDEX.md`
+0. **创建备份快照**（命名与存储规则见 `references/rollback-guide.md`）
+1. 用 Edit 工具对目标文件逐一应用变更，每步验证完整性
+2. 在 `skill-evolve/evolution-log/` 创建进化记录（格式见 `references/skill-evolve-guide.md` 进化记录格式章节）
+3. 更新 `evolution-log/INDEX.md`
 
 ### Step 5: 回滚
 
@@ -279,14 +211,7 @@ cp prd-review/eval/baseline.json <skill-name>/eval/
 输入编号选择要回滚的版本，或输入 "取消"。
 ```
 
-**边界情况：**
-
-| 场景 | 处理方式 |
-|------|---------|
-| 无进化记录 | 提示"<skill-name> 暂无进化记录，无需回滚" |
-| 有记录但无备份 | 提示"记录 #N 无备份快照，无法自动回滚。可手动参考进化记录中的变更详情反向修改" |
-| 指定日期无记录 | 提示最接近的日期记录，让用户确认 |
-| 多个记录（堆叠进化） | 警告"回滚将撤销此记录之后所有堆叠的变更"，建议从最新记录开始逐个回滚 |
+**边界情况：** 详见 `references/rollback-guide.md` 回滚决策树（无记录/无备份/指定日期/堆叠进化等场景）。
 
 #### 5.2 展示回滚影响
 
@@ -323,31 +248,7 @@ cp prd-review/eval/baseline.json <skill-name>/eval/
 3. 验证文件完整性（行数合理性检查、关键章节存在性检查）
 4. 创建回滚记录：`skill-evolve/evolution-log/<skill-name>/YYYY-MM-DD-rollback-<slug>.md`
 
-**回滚记录格式：**
-```markdown
-# 回滚记录: [原进化记录标题]
-
-- **日期:** YYYY-MM-DD HH:MM
-- **回滚目标:** [原进化记录文件名]
-- **原进化日期:** YYYY-MM-DD
-- **回滚原因:** [用户提供的原因，或 "用户主动回滚"]
-- **恢复自备份:** [备份路径]
-- **影响文件:** [路径列表]
-- **状态:** 🔄 已回滚
-
-## 原进化记录
-
-- 原进化摘要: [从原记录复制的变更描述]
-- 原触发反馈: [从原记录复制]
-
-## 回滚详情
-
-[从备份恢复了哪些文件]
-
-## 用户决策
-- 决策: 确认回滚
-- 附加说明: [如有]
-```
+**回滚记录格式：** 详见 `references/rollback-guide.md` 回滚记录 vs 进化记录章节。
 
 5. 更新原进化记录的状态为 `🔄 已回滚（于 YYYY-MM-DD）`
 6. 更新 `evolution-log/INDEX.md`，添加回滚记录
@@ -366,13 +267,7 @@ cp prd-review/eval/baseline.json <skill-name>/eval/
 
 #### 5.5 回滚安全规则
 
-| 规则 | 说明 |
-|------|------|
-| **不得跳过备份** | 每次回滚前必须确认备份存在且完整 |
-| **不得静默覆盖** | 回滚前必须展示 diff 预览并获用户确认 |
-| **记录必须完整** | 回滚操作必须生成完整的回滚记录 |
-| **可再次进化** | 回滚后的反馈如标记为"重新分析"，可在下次进化中重新处理 |
-| **备份不可删除** | 即使回滚完成，原备份快照保留不删，支持再次回滚 |
+5 条强制规则（不得跳过备份、不得静默覆盖、记录必须完整、可再次进化、备份不可删除），详见 `references/rollback-guide.md` 安全检查清单。
 
 ---
 
@@ -381,6 +276,7 @@ cp prd-review/eval/baseline.json <skill-name>/eval/
 ### 进化流程
 - [ ] 反馈来源已确认（至少 1 条结构化反馈或 memory 记录）
 - [ ] 反馈已按问题类型分组
+- [ ] Step 2.5 分析结果已获用户确认（分组/优先级/排除项）
 - [ ] 每个改进建议有明确的反馈证据支撑
 - [ ] 每个改进建议目标文件和位置明确
 - [ ] 评估门控已完成（有 eval 用例则必须跑，无则标注跳过）
@@ -407,6 +303,7 @@ cp prd-review/eval/baseline.json <skill-name>/eval/
 | 无任何反馈 | 提示用户先收集反馈 | 不凭空生成建议 |
 | 多个反馈指向同一问题 | 合并为一个改进建议 | 提高优先级 |
 | 反馈相互矛盾 | 标注冲突 | 让用户裁决 |
+| Step 2.5 分析结果确认 | 展示分组和优先级，等用户确认 | 在生成 diff 前纠正方向，成本最低 |
 | 目标 skill 无专用 feedback-template | 使用通用模板 | `skill-evolve/references/feedback-template.md` |
 | 目标 skill 无 eval 用例 | 跳过 Step 3.5 | 标注 "⚠️ 无 eval 用例" |
 | 评估门控 🔴 blocked | 要求用户显式确认覆盖 | 普通"是"不生效 |
@@ -424,56 +321,27 @@ cp prd-review/eval/baseline.json <skill-name>/eval/
 
 ## Common Issues 常见问题
 
-### 进化常见问题
+### 进化
 | 问题 | 处理方式 |
 |------|---------|
 | 反馈数量太少（< 2 条）| 降低置信度，只生成低风险的措辞/示例改进 |
-| 反馈没有明确指出 SKILL.md 的问题 | 先反推可能的关联章节，标注 `[推测]` |
 | 改进建议涉及多个文件 | 按依赖顺序排列，先改 SKILL.md 再改 references |
-| 同一 skill 有多个版本的 feedback | 优先使用最新的反馈（按日期比较）|
-| 某个改进建议用户反复拒绝 | 记录到进化日志 state=rejected，后续不再自动建议 |
 | eval 用例过时或覆盖不全 | 标注 `⚠️ eval 覆盖不完整`，降低门控拦截力度 |
-| 用户覆盖 🔴 blocked 后出现退化 | 在 evolution-log 记录退化情况，下次进化时优先关注 |
 
-### 回滚常见问题
+### 回滚
 | 问题 | 处理方式 |
 |------|---------|
 | 回滚点无备份快照 | 提示手动操作：参考进化记录中的变更详情反向修改 |
 | 回滚后还想恢复 | 备份不删除，可对新回滚记录再次回滚（回滚的回滚 = 恢复） |
-| 回滚前文件已被手动修改 | 提示当前文件内容与备份 diff 有额外差异，让用户确认是否仍要覆盖 |
-| 用户选择回滚多个版本 | 按时间倒序逐个回滚，每步确认 |
-| 回滚后发现原进化其实更好 | 对回滚记录再执行回滚即可恢复 |
+| 回滚前文件已被手动修改 | 提示当前文件与备份 diff 有额外差异，让用户确认是否仍要覆盖 |
+
+> 完整常见问题列表：详见 `references/skill-evolve-guide.md` 和 `references/rollback-guide.md`。
 
 ## Evolution History 进化历史
 
-每个 skill 的进化记录存放在 `skill-evolve/evolution-log/<skill-name>/` 目录下。
+进化记录存放在 `skill-evolve/evolution-log/<skill-name>/`，索引文件 `evolution-log/INDEX.md` 列出所有记录。
 
-**目录结构：**
-```
-evolution-log/<skill-name>/
-├── YYYY-MM-DD-<slug>.md          # 进化记录
-├── YYYY-MM-DD-rollback-<slug>.md # 回滚记录
-└── backups/
-    └── YYYY-MM-DD-<slug>/         # 备份快照（进化前的文件原文）
-        ├── <skill>_SKILL.md
-        └── <skill>_references_<file>.md
-```
-
-**进化记录格式：**
-```markdown
-# 进化记录: [简短描述]
-
-- **日期:** YYYY-MM-DD HH:MM
-- **触发反馈:** [反馈来源]
-- **问题类型:** [类型]
-- **变更描述:** [1 句话]
-- **影响文件:** [路径列表]
-- **备份路径:** [backups/ 下的目录路径]
-- **评估门控:** 🟢 passed / 🟡 warning / 🔴 blocked / ⚠️ 无 eval 用例
-- **状态:** ✅ 已应用 / ❌ 已拒绝 / 🔄 已回滚（于 YYYY-MM-DD）
-```
-
-**索引：** `skill-evolve/evolution-log/INDEX.md` 列出所有记录。
+> 目录结构、进化记录格式、回滚记录格式：详见 `references/skill-evolve-guide.md` 进化记录格式章节和 `references/rollback-guide.md`。
 
 ## References 参考文件
 

@@ -257,3 +257,82 @@
 - "稍后" → 暂时跳过，下次对话开始再提示
 - "忽略" → 标记为已处理，不再提示
 ```
+
+---
+
+## 快速开始：新 Skill 接入
+
+### 文件结构
+
+```
+<skill-name>/
+├── references/
+│   └── feedback-template.md    # 可选：skill 专用的反馈模板（有针对性的字段）
+└── eval/
+    ├── eval-cases.json          # 可选：评估用例（用于回归检测）
+    └── baseline.json            # 可选：基线分数
+```
+
+### 三级接入
+
+| 级别 | 需要的文件 | 获得的能力 |
+|------|-----------|-----------|
+| **L1 基础** | 无（zero-config） | 反馈收集 + 模式分析 + 改进建议 + 人工审批 |
+| **L2 结构化反馈** | `references/feedback-template.md` | 上述 + 反馈自动结构化解析 |
+| **L3 完整进化** | L2 + `eval/eval-cases.json` + `eval/baseline.json` | 上述 + 评估门控（变更前自动检测退化风险） |
+
+### 接入步骤
+
+**Step 1（L1 — 零配置）：** skill-evolve 自动发现 auto-memory 匹配的 feedback。
+```
+skill 进化 <skill-name>
+```
+
+**Step 2（L2 — 添加反馈模板）：** 复制通用模板并定制。
+```
+cp skill-evolve/references/feedback-template.md <skill-name>/references/
+# 编辑模板，将"涉及维度"改为 skill 特有的评估维度
+```
+
+**Step 3（L3 — 添加 eval 用例）：** 参考 prd-review 格式创建。
+```
+mkdir -p <skill-name>/eval
+cp prd-review/eval/baseline.json <skill-name>/eval/
+# 编辑 eval-cases.json，描述每个用例的输入和预期行为
+```
+
+> **1 个 eval 用例即可见效**：即使只有 1 个用例覆盖核心场景，评估门控就能标记退化风险。
+
+### 已接入 skill 状态
+
+| Skill | 接入级别 | feedback-template | eval 用例 |
+|-------|---------|-------------------|----------|
+| prd-review | L3 完整进化 | ✅ 专用模板 | ✅ 7 个用例 |
+| tech-debt-scanner | L3 完整进化 | ✅ 专用模板 | ✅ 5 个用例 |
+| gn-reviewer | L3 完整进化 | ✅ 专用模板 | ✅ 5 个用例 |
+| cpp-memory-safety | L3 完整进化 | ✅ 专用模板 | ✅ 5 个用例 |
+| harness-score | L3 完整进化 | ✅ 专用模板 | ✅ 4 个用例 |
+
+---
+
+## 进化常见问题汇总（完整版）
+
+| 问题 | 处理方式 |
+|------|---------|
+| 反馈数量太少（< 2 条）| 降低置信度，只生成低风险的措辞/示例改进 |
+| 反馈没有明确指出 SKILL.md 的问题 | 先反推可能的关联章节，标注 `[推测]` |
+| 改进建议涉及多个文件 | 按依赖顺序排列，先改 SKILL.md 再改 references |
+| 同一 skill 有多个版本的 feedback | 优先使用最新的反馈（按日期比较）|
+| 某个改进建议用户反复拒绝 | 记录到进化日志 state=rejected，后续不再自动建议 |
+| eval 用例过时或覆盖不全 | 标注 `⚠️ eval 覆盖不完整`，降低门控拦截力度 |
+| 用户覆盖 🔴 blocked 后出现退化 | 在 evolution-log 记录退化情况，下次进化时优先关注 |
+
+## 回滚常见问题汇总（完整版）
+
+| 问题 | 处理方式 |
+|------|---------|
+| 回滚点无备份快照 | 提示手动操作：参考进化记录中的变更详情反向修改 |
+| 回滚后还想恢复 | 备份不删除，可对新回滚记录再次回滚 |
+| 回滚前文件已被手动修改 | 提示当前文件与备份 diff 有额外差异，让用户确认 |
+| 用户选择回滚多个版本 | 按时间倒序逐个回滚，每步确认 |
+| 回滚后发现原进化其实更好 | 对回滚记录再执行回滚即可恢复 |
