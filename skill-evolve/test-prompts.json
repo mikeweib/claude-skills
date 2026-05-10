@@ -1,0 +1,17 @@
+[
+  {
+    "id": 1,
+    "prompt": "skill 进化 prd-review",
+    "expected": "收集 prd-review 的 auto-memory 反馈 → 分析模式 → Step 2.5 展示分析结果并暂停等确认 → 生成改进建议 → 评估门控 → Step 4 展示汇总并等审批 → 应用变更"
+  },
+  {
+    "id": 2,
+    "prompt": "skill 回滚 prd-review",
+    "expected": "列出 prd-review 可回滚版本 → 展示 diff 预览 → 等确认 → 执行回滚恢复文件 → 创建回滚记录 → 询问反馈处理方式"
+  },
+  {
+    "id": 3,
+    "prompt": "skill 进化 non-existent-skill",
+    "expected": "提示未找到该 skill 的反馈记录或 skill 不存在，建议先使用 skill 积累反馈"
+  }
+]

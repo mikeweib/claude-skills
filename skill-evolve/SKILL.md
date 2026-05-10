@@ -80,7 +80,18 @@ description: Meta-skill for skill auto-evolution with eval gating and rollback. 
 
 ### Step 2: 分析反馈模式
 
-按问题类型分组（6 类详解见 `references/skill-evolve-guide.md`）。
+按问题类型分组：
+
+| # | 类型 | 定义 | 识别信号 | 常见修复目标 |
+|---|------|------|---------|------------|
+| 1 | **terminology-calibration** | 术语适用范围需细化，不该扣却扣了 | "这个不应扣分，是行业通用术语" | review-checklist.md 术语检查项 |
+| 2 | **threshold-adjustment** | 扣分值/权重/门槛等数值不合理 | 某维度得分反复集中在极低/极高区间 | 维度权重、最高扣分、及格线 |
+| 3 | **checklist-update** | 检查清单遗漏或冗余 | 审查漏掉某类问题 / 检查项重复 | review-checklist.md 检查项 |
+| 4 | **trigger-refinement** | 触发条件误判（该触发未触发/不该触发却触发了） | "我问了 X 但 skill 没激活" | SKILL.md frontmatter description / When to Use |
+| 5 | **diagnostic-enhancement** | 边界场景处理不完善 | 维度 < 40% 但 diagnostic-guide.md 无对应建议 | diagnostic-guide.md / 边界表 |
+| 6 | **example-addition** | 缺少示例导致判断不一致 | 同类文档两次评审差异大 | SKILL.md / reference 示例 |
+
+> 完整定义和 prd-review 案例详见 `references/skill-evolve-guide.md` 6 种改进分类章节。
 
 **分析输出——对每组反馈：**
 - 根因：是 SKILL.md 哪个章节/段落的哪个规则导致的问题
