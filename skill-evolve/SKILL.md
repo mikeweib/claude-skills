@@ -62,12 +62,22 @@ description: Meta-skill for skill auto-evolution with eval gating and rollback. 
 - 先尝试按 `<skill-name>/references/feedback-template.md` 的格式结构化
 - 如果目标 skill 没有专用模板，使用通用模板 `skill-evolve/references/feedback-template.md`
 
+**来源 C — 评审报告（条件可用）：**
+
+针对每条反馈，尝试匹配对应的历史评审报告，用于 Step 2 精确对比：
+
+1. 从反馈中提取 PRD 文件名标识（优先取 feedback 模板的"输入情况"字段，fallback 为用户原话中提及的文件名关键词）
+2. 到 `<skill-name>/eval/results/` 下按文件名模糊匹配
+3. 匹配到 → 读入报告内容
+4. 未匹配到 → 标注"报告缺失"，使用 feedback 文本字段 fallback
+
 **输出：** 反馈列表，每条包含：
 - 来源（文件路径或对话）
 - 问题类型（误判/漏判/格式问题/建议不实用）
 - 涉及维度（如适用）
 - 严重程度（高/中/低）
 - 反馈摘要
+- 匹配的报告文件（如有）
 
 > **边界情况：**
 >
@@ -77,6 +87,7 @@ description: Meta-skill for skill auto-evolution with eval gating and rollback. 
 > | 反馈数 < 2 条 | 降低置信度标注，仅建议低风险改进（措辞/示例补充），不调整核心规则 |
 > | 反馈数 >= 5 条 | 标注"高置信度"，可考虑系统性问题 |
 > | 用户同时提供多个 feedback 来源 | 合并去重（按 originSessionId）|
+| 反馈匹配不到评审报告 | 标注"报告缺失"，降级使用 feedback 文本字段分析。置信度降低 |
 
 ### Step 2: 分析反馈模式
 

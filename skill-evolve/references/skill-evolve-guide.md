@@ -269,6 +269,8 @@
 ├── references/
 │   └── feedback-template.md    # 可选：skill 专用的反馈模板（有针对性的字段）
 └── eval/
+    ├── save-config.json         # L2+ 创建：skill-evolve 写入，告知 skill 持久化评审报告
+    ├── results/                  # L2+ 创建：评审报告存档目录
     ├── eval-cases.json          # 可选：评估用例（用于回归检测）
     └── baseline.json            # 可选：基线分数
 ```
@@ -277,8 +279,8 @@
 
 | 级别 | 需要的文件 | 获得的能力 |
 |------|-----------|-----------|
-| **L1 基础** | 无（zero-config） | 反馈收集 + 模式分析 + 改进建议 + 人工审批 |
-| **L2 结构化反馈** | `references/feedback-template.md` | 上述 + 反馈自动结构化解析 |
+| **L1 基础** | 无（zero-config） | 反馈收集 + 模式分析 + 改进建议 + 人工审批（评审报告不持久化） |
+| **L2 结构化反馈** | `references/feedback-template.md` + `eval/save-config.json` + `eval/results/` | 上述 + 反馈自动结构化解析 + 评审报告持久化 + 报告反馈匹配 |
 | **L3 完整进化** | L2 + `eval/eval-cases.json` + `eval/baseline.json` | 上述 + 评估门控（变更前自动检测退化风险） |
 
 ### 接入步骤
@@ -288,10 +290,13 @@
 skill 进化 <skill-name>
 ```
 
-**Step 2（L2 — 添加反馈模板）：** 复制通用模板并定制。
+**Step 2（L2 — 添加反馈模板 + 报告持久化）：** 复制通用模板并定制，创建持久化配置。
 ```
 cp skill-evolve/references/feedback-template.md <skill-name>/references/
 # 编辑模板，将"涉及维度"改为 skill 特有的评估维度
+
+mkdir -p <skill-name>/eval/results
+echo '{"output": "eval/results/"}' > <skill-name>/eval/save-config.json
 ```
 
 **Step 3（L3 — 添加 eval 用例）：** 参考 prd-review 格式创建。
